@@ -15,6 +15,7 @@ export interface Skill { name: string; description: string; source: string; dir:
 export interface SkillsOptions { userDir?: string; workspace?: string; pluginsDir?: string }
 const err = (message: string): ProviderExecuteResult => ({ error: { code: 'CAPABILITY_ERROR', message, retryable: false } });
 const NAME_OK = /^[a-z0-9][a-z0-9._-]{0,63}$/i;
+const MAX_LISTED = 40;
 
 /** 只解析我们需要的三把钥匙：name / description / requires（不引 yaml 库） */
 export function parseFrontmatter(text: string): { name?: string; description?: string; requires?: string[]; body: string } {
@@ -80,7 +81,9 @@ export class SkillsProvider implements CapabilityProvider {
       if (inv.contract.name === 'skill.list') {
         const q = a['query'] ? String(a['query']).toLowerCase() : '';
         const hit = q ? skills.filter(s => s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q)) : skills;
-        const summary = hit.length ? `技能库（${hit.length}）——对得上的先 skill.read 读全文再动手：\n${hit.map(s => `- ${s.name}：${s.description}${s.requires?.length ? `（需要 ${s.requires.join(', ')}）` : ''}`).join('\n')}` : '技能库为空（~/.cak/skills/<name>/SKILL.md，或 plugin.search 装 skill 角色的条目）。';
+        // 上下文预算：清单每轮都进模型，超过 MAX_LISTED 条只列前 N 条 + 提示用 query 筛（描述也截到 120 字）
+        const shown = hit.slice(0, MAX_LISTED); const more = hit.length - shown.length;
+        const summary = hit.length ? `技能库（${hit.length}）——对得上的先 skill.read 读全文再动手：\n${shown.map(s => `- ${s.name}：${s.description.slice(0, 120)}${s.requires?.length ? `（需要 ${s.requires.join(', ')}）` : ''}`).join('\n')}${more > 0 ? `\n…还有 ${more} 个没列出，用 skill.list {"query":"关键词"} 筛。` : ''}` : '技能库为空（~/.cak/skills/<name>/SKILL.md，或 plugin.search 装 skill 角色的条目）。';
         return { output: { skills: hit.map(s => ({ name: s.name, description: s.description, source: s.source, ...(s.requires ? { requires: s.requires } : {}), files: listFiles(s.dir).length })), summary } as unknown as Json };
       }
       if (inv.contract.name === 'skill.read') {

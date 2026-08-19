@@ -40,6 +40,11 @@ test('skill.read: 正文去 frontmatter、附件、files 列表、maxChars 截�
   const nf = await call(p, READ, { name: 'weekly-report', file: 'nope.md' }); assert.match(nf.error.message, /no such file/);
   const unk = await call(p, READ, { name: 'ghost' }); assert.match(unk.error.message, /unknown skill "ghost"；已装：incident-triage, project-conventions, weekly-report/);
 });
+test('技能很多时 summary 只列前 40 条 + 提示筛选（上下文预算）', async () => {
+  const big = path.join(tmp, 'big'); for (let i = 0; i < 45; i++) mk(path.join(big, `s${String(i).padStart(2, '0')}`), `description: 第 ${i} 个技能`, 'x');
+  const r = await call(new SkillsProvider({ userDir: big, workspace: path.join(tmp, 'none'), pluginsDir: path.join(tmp, 'none') }), LIST, {});
+  assert.equal(r.output.skills.length, 45); assert.equal((r.output.summary.match(/^- /gm) ?? []).length, 40); assert.match(r.output.summary, /还有 5 个没列出/);
+});
 test('空环境：list 为空不报错；health', async () => {
   const e = new SkillsProvider({ userDir: path.join(tmp, 'none'), workspace: path.join(tmp, 'none2'), pluginsDir: path.join(tmp, 'none3') });
   const r = await call(e, LIST, {}); assert.deepEqual(r.output.skills, []); assert.match(r.output.summary, /为空/); assert.equal((await e.health()).status, 'healthy');
