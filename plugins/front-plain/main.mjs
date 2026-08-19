@@ -10,7 +10,7 @@ const info = JSON.parse(fs.readFileSync(pick, 'utf8')); let id = 1; const agent 
 const rpc = async (method, params = {}) => { const r = await fetch(info.url + '/rpc', { method: 'POST', headers: { 'content-type': 'application/json', 'x-cak-token': info.token }, body: JSON.stringify({ cak: '1', jsonrpc: '2.0', id: id++, method, params: agent && params.agent === undefined ? { agent, ...params } : params }) }); if (r.status === 401) throw new Error('token 不对（内核重启过？）'); const j = await r.json(); if (j.error) throw new Error(j.error.message); return j.result; };
 let st; try { st = await rpc('session.status'); } catch (e) { console.error('front-plain: 连不上内核：' + e.message); process.exit(2); }
 console.log(`[front-plain] ${st.session} @ ${st.workspace} · ${st.plugins.length} 插件 · 输入即提交，审批答 y/n/s · /quit 或 Ctrl-C 退出（内核继续跑）`);
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); let pending = []; let answering = false; let streamed = false; let quitting = false;
+const rl = readline.createInterface({ input: process.stdin, output: process.stdout }); const earlyLines = []; const earlyListener = l => earlyLines.push(l); rl.on('line', earlyListener);   // 管道模式：连上之前到的行先攒着（regress-2） let pending = []; let answering = false; let streamed = false; let quitting = false;
 const seen = new Set(); const mine = new Set(); const decidedElsewhere = new Set(); const apInv = new Map();
 const bye = () => { if (quitting) return; quitting = true; try { rl.close(); } catch { /* */ } console.log('\n[front-plain] 已退出前端；内核还在后台跑，停：cak stop'); process.exit(0); };
 rl.on('SIGINT', bye); process.on('SIGINT', bye); rl.on('close', bye);
@@ -33,4 +33,5 @@ http.get(u, res => { let buf = ''; res.setEncoding('utf8'); res.on('data', c => 
 // 连接时先拉已经在等的审批
 try { const pend = await rpc('session.pending'); const s2 = await rpc('session.status'); if (s2.running) console.log(`[状态] agent 在跑${s2.current?.input ? '：' + String(s2.current.input).slice(0, 60) : ''}${s2.queued ? `（排队 ${s2.queued}）` : ''}`); if (pend.length) { console.log(`[状态] 有 ${pend.length} 条审批在等你`); pending.push(...pend); askApproval(); } } catch (e) { console.log('[错误] ' + e.message); }
 rl.setPrompt('> '); if (!answering) rl.prompt();
+rl.off('line', earlyListener); for (const l of earlyLines) setImmediate(() => rl.emit('line', l));
 rl.on('line', async line => { line = line.trim(); if (!line || answering) return; if (line === '/quit' || line === '/exit') return bye(); try { await rpc('session.input', { text: line }); } catch (e) { console.log('✗ ' + e.message); } });

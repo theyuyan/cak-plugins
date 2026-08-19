@@ -110,11 +110,14 @@ export class WebhookProvider implements CapabilityProvider {
   }
   listImplementations(): CapabilityImplementation[] { return CONTRACTS.map(contract => ({ providerId: this.id, contract, priority: 50 })); }
   /** 停掉 HTTP 服务（测试/退出用） */
-  async close(): Promise<void> { this.closed = true; const s = this.server; this.server = undefined; if (s) { s.closeAllConnections?.(); await new Promise<void>(r => s.close(() => r())); } }
+  async close(): Promise<void> { this.closed = true; if (this.watchdog) { clearInterval(this.watchdog); this.watchdog = undefined; } const s = this.server; this.server = undefined; if (s) { s.closeAllConnections?.(); await new Promise<void>(r => s.close(() => r())); } }
   /** 当前可用端口：自己监听的端口，或客户端模式下另一实例的端口（都没有返回 undefined） */
   get port(): number | undefined { const a = this.server?.address(); return a && typeof a === 'object' ? a.port : this.clientPort; }
   /** 客户端模式（另一实例在监听、本进程不听）？ */
   get clientMode(): boolean { return !this.server && this.clientPort !== undefined; }
+  private watchdog?: NodeJS.Timeout;
+  /** 客户端模式看门狗：每 10s 探一次对端，死了就接管监听（URL 才能一直有效） */
+  private armWatchdog() { if (this.watchdog) return; this.watchdog = setInterval(() => { if (this.closed || !this.clientMode) return; this.ensureListening().catch(() => {}); }, 10_000); this.watchdog.unref?.(); }
   /** 探测 host:port 上是不是本插件的实例（GET / 回 {"cak":"webhook"}）；1s 超时 */
   private probeSelf(port: number): Promise<boolean> {
     const host = this.bind === '0.0.0.0' || this.bind === '::' ? '127.0.0.1' : this.bind;
@@ -154,10 +157,13 @@ export class WebhookProvider implements CapabilityProvider {
     this.log(`created ${name}${this.clientMode ? '（客户端模式：由同机另一实例 :' + port + ' 监听）' : ''}`);
     return { output: { name, url: `${this.baseUrl(port)}/h/${name}/${token}`, token, createdAt: now } as unknown as Json };
   }
-  private listHooks(): ProviderExecuteResult {
+  private async listHooks(): Promise<ProviderExecuteResult> {
     const st = loadStore(this.file); const port = this.port;
     const hooks = st.hooks.slice().sort((x, y) => x.createdAt.localeCompare(y.createdAt)).map(h => ({ name: h.name, ...(h.agent ? { agent: h.agent } : {}), createdAt: h.createdAt, hits: h.hits, ...(h.lastHitAt ? { lastHitAt: h.lastHitAt } : {}), ...(h.lastStatus ? { lastStatus: h.lastStatus } : {}), ...(h.lastError ? { lastError: h.lastError } : {}) }));
-    return { output: { listening: port !== undefined, ...(port !== undefined ? { baseUrl: this.baseUrl(port) } : {}), hooks } as unknown as Json };   // 客户端模式下 listening=true（同机另一实例在听）
+    // 客户端模式：对端可能已经停了（回归测试员抓到：list 仍报 listening:true、URL 全失效）→ 每次 list 先探一次，死了就接管
+    if (this.clientMode) { try { await this.ensureListening(); } catch { /* 报到下面 */ } }
+    const port2 = this.port; const listening = this.server ? true : (port2 !== undefined ? await this.probeSelf(port2) : false);
+    return { output: { listening, ...(port2 !== undefined ? { baseUrl: this.baseUrl(port2) } : {}), hooks } as unknown as Json };   // 客户端模式下 listening=true（同机另一实例在听）
   }
   private async deleteHook(name: string): Promise<ProviderExecuteResult> {
     const st = withLock(this.file, () => { const cur = loadStore(this.file); const i = cur.hooks.findIndex(h => h.name === name); if (i >= 0) { cur.hooks.splice(i, 1); saveStore(this.file, cur); } return i >= 0 ? cur : undefined; });
@@ -184,7 +190,7 @@ export class WebhookProvider implements CapabilityProvider {
         catch (e) {
           lastErr = e as Error;
           if ((e as NodeJS.ErrnoException).code === 'EADDRINUSE') {
-            if (await this.probeSelf(port)) { this.clientPort = port; this.lastListenError = undefined; this.log(`peer instance already listening on :${port}, entering client mode`); return; }
+            if (await this.probeSelf(port)) { this.clientPort = port; this.lastListenError = undefined; this.armWatchdog(); this.log(`peer instance already listening on :${port}, entering client mode`); return; }
             if (fixed !== undefined && port === fixed) this.log(`port ${port} held by another program, ${this.forcedPort !== undefined ? 'giving up (WEBHOOK_PORT forced)' : 'picking a new one'}`);
           }
         }

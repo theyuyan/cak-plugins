@@ -5,6 +5,8 @@ import { WebhookProvider, CONTRACT_CREATE, CONTRACT_LIST, CONTRACT_DELETE, rende
 const call = (p, contract, args) => p.execute({ id: 'i', revision: 0, contract, args, handle: { id: 'h', contract, caveats: [], delegable: true }, principal: [], digest: 'x', idempotencyKey: 'i' }, { principal: [], trace: { traceId: 't', spanId: 's' } });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const WS = '/tmp/fake-workspace-for-webhook-test';
+// 测试里各 case 复用同一个固定端口：上一个 case 关掉的服务器留下的 keep-alive 连接会被全局 fetch 复用 → ECONNRESET；一律 connection: close
+const fetch0 = globalThis.fetch; const fetch = (url, init = {}) => fetch0(url, { ...init, headers: { ...(init.headers ?? {}), connection: 'close' } });
 const post = (url, body, headers = {}) => fetch(url, { method: 'POST', headers: { 'content-type': 'application/json', ...headers }, body: typeof body === 'string' ? body : JSON.stringify(body) });
 
 // 假 daemon：记录收到的 session.input
