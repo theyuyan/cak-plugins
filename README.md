@@ -24,6 +24,7 @@ CAK（Composable Agent Kernel）的社区插件 monorepo。每个插件 = 一个
 | `plugins/doc-write` | `doc.write.docx@1` `doc.write.xlsx@1` `doc.write.html@1` | 产出办公文件：Markdown 子集→Word、二维表→Excel、GFM→自包含 HTML（白名单清洗）；只写工作区内；docx/xlsx 只用 LibreOffice 与解析器读回验过，Word/Excel 本体没人眼看过 |
 | `plugins/webhook` | `webhook.create@1` `webhook.list@1` `webhook.delete@1` | 本机 HTTP webhook：外部系统 POST 一下把 agent 叫醒（模板渲染请求体→投递会话）；默认只监听 127.0.0.1、token 在 URL、限流；未在公网跑 |
 | `plugins/open-sources` | `feed.read@1` `hn.top@1` `wiki.search@1` `arxiv.search@1` | 免 key 公开信息源：RSS/Atom/JSON Feed、Hacker News、维基百科、arXiv；已真联网冒烟一次 |
+| `plugins/skills` | `skill.list@1` `skill.read@1` | **技能库**：技能=给模型看的流程说明书（SKILL.md），三处来源（~/.cak/skills、工作区 .cak/skills、注册表 skill 角色条目）；清单每轮进上下文，对得上再读全文；读取进账本 |
 | `plugins/desktop` | `desktop.notify@1` `desktop.open@1` `desktop.clipboard.read@1` `desktop.clipboard.write@1` | 桌面：系统通知 / 默认程序打开工作区文件或网址 / 读写剪贴板；macOS 真跑过，Linux/Windows 只用假 spawn 测过 |
 
 ## 用
@@ -37,3 +38,13 @@ cd plugins/http-fetch && npm install && npm run build && npm test && npm run con
 
 ## 写新插件
 `npm create @cak-dev/plugin <name> --contract <name> --digest <sha256:…>`（digest 从 cak-registry `contracts/` 抄），实现 `listImplementations()` / `execute()`，过 conformance，再向 cak-registry 提 PR 加条目。**声明 `idempotent: true` 的契约，输出里不能有每次都变的字段**（durationMs / created…），conformance C5 会比对两次结果。
+
+## skills/ — 技能包（roles: skill，只有 SKILL.md，T0）
+
+| 技能 | 何时用 |
+|---|---|
+| `skills/cak-plugin-author` | 用户要写一个 CAK 插件 / 加新能力 |
+| `skills/weekly-report` | 写周报 / 本周总结（git.log → 归类 → 确认后 doc.write.docx） |
+| `skills/incident-triage` | 排障：先定发病时间与范围、换第二个靶子对照、一次只改一个变量 |
+
+技能怎么写、怎么被 agent 用到：见 `plugins/skills/README.md`。

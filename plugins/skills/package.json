@@ -1,0 +1,14 @@
+{
+  "name": "skills",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract skill.list --args '{}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract skill.read --args '{\"name\":\"nonexistent\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": { "@cak-dev/sdk": "^0.3.0" },
+  "devDependencies": { "typescript": "^5.6.0", "@types/node": "^22.0.0" },
+  "description": "CAK 插件：技能库（skill.list@1 / skill.read@1）— 技能=给模型看的流程说明书（SKILL.md），三处来源，读取进账本"
+}

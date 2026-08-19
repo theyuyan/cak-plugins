@@ -1,0 +1,13 @@
+id: plugins/skills
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: skill.list, version: 1.0.0, schemaDigest: "sha256:b22f0931996ed3b2135b441c1cec057c4b0a40a6bf0d2e6d60b92d36c23f743b" }
+      priority: 50
+    - contract: { name: skill.read, version: 1.0.0, schemaDigest: "sha256:e0fa6a1f2acf3fb79f0c42afcc7a92a2f606afaefb533e5c132965bf4301a817" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }
