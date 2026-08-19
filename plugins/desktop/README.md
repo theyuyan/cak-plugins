@@ -51,7 +51,7 @@ npm run conformance      # 四个契约各跑一遍（open 走 DESKTOP_DRY_RUN=1
 
 ## 安全边界
 
-- **open 的路径墙**：`target` 用 `path.relative` 判定，越出 `CAK_WORKSPACE`（缺省 `process.cwd()`）一律 `CAPABILITY_ERROR`；工作区内的绝对路径放行；不存在的文件拒。网址只放行 `http:` / `https:`，`file:` / `javascript:` / `mailto:` / `ftp:` 等任何其他 scheme 拒绝（单字母 `C:` 视为 Windows 盘符走路径规则）。契约声明 `permissions:["fs.read"]`，句柄 caveat 是第二道墙。
+- **open 的路径墙**：`target` 先按字面 `path.relative` 判一次，再按 **realpath（符号链接解析后）** 判一次（不存在的目标按最近存在的祖先目录）——工作区里 `ln -s /etc/hosts link` 这种也拒（真驱动测试曾借它打开了 /etc/hosts，已修）；越出 `CAK_WORKSPACE`（缺省 `process.cwd()`）一律 `CAPABILITY_ERROR`；工作区内的绝对路径放行；不存在的文件拒。网址只放行 `http:` / `https:`，`file:` / `javascript:` / `mailto:` / `ftp:` 等任何其他 scheme 拒绝（单字母 `C:` 视为 Windows 盘符走路径规则）。契约声明 `permissions:["fs.read"]`，句柄 caveat 是第二道墙。
 - **notify / open 是 external**：会在用户屏幕上出现东西（通知、窗口、浏览器标签），默认要人审批。open 打开的是"默认程序"——打开一个 `.html` 就是起浏览器、打开 `.sh` 在某些桌面上可能是执行——所以只允许工作区内文件，且审批时请看清 target。
 - **注入防护**：macOS 的 AppleScript 字符串里 `\`、`"`、换行/回车/制表都被转义（其他控制字符去掉），中文原样；Windows Toast 文本用 PowerShell 单引号字面量（`'`→`''`）经 `CreateTextNode` 塞进 XML、整段脚本 `-EncodedCommand`（UTF-16LE base64）传递，不拼 XML/不经 `-Command` 引号解析；Linux `notify-send` 用 `--` 隔开位置参数，标题以 `-` 开头也不会被当成选项。所有平台都是 argv 数组，**不经 shell**（Windows open 用 `windowsVerbatimArguments` 自己拼 `start "" "<target>"`，target 含引号/换行时拒绝——URL 里的引号会先被 `new URL` 规范成 `%22`）。
 - **剪贴板读取是隐私点**：`desktop.clipboard.read` 会把用户剪贴板里的内容（可能是密码、聊天记录、内部文档）送进模型上下文。契约按"read 免审"设计（否则每次都点太烦），**如果你不放心，在 profile / 句柄 caveat 里把它改成 `requires-approval`**，或者只在明确让 agent 看剪贴板时才给它这个句柄。`desktop.clipboard.write` 会覆盖用户当前剪贴板内容（write，默认审批）。

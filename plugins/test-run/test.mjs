@@ -326,6 +326,11 @@ test('cwd escaping workspace → CAPABILITY_ERROR', async () => {
   for (const cwd of ['..', '../..', '/', path.join(d, '..')]) { const r = await call(p, { cwd, framework: 'custom', argv: ['node', '-e', '0'] }); assert.equal(r.error?.code, 'CAPABILITY_ERROR', cwd); assert.match(r.error.message, /escapes workspace/); }
   const ok = await call(p, { cwd: '.', framework: 'custom', argv: ['node', '-e', 'console.log("hi")'] }); assert.equal(ok.output.exitCode, 0); assert.match(ok.output.outputTail, /hi/); assert.equal(ok.output.parsed, false);
   const nodir = await call(p, { cwd: 'missing', framework: 'custom', argv: ['node', '-e', '0'] }); assert.match(nodir.error.message, /not a directory/);
+  // 符号链接越界：工作区里 ln -s <外面目录> link → cwd=link 拒；ln -s /etc/hosts 也拒；指向工作区内的 link 放行
+  const outside = tmp('esc-outside'); fs.symlinkSync(outside, path.join(d, 'dir_link')); fs.symlinkSync('/etc/hosts', path.join(d, 'hosts_link')); fs.mkdirSync(path.join(d, 'inner')); fs.symlinkSync(path.join(d, 'inner'), path.join(d, 'inner_link'));
+  const sl = await call(p, { cwd: 'dir_link', framework: 'custom', argv: ['node', '-e', '0'] }); assert.equal(sl.error?.code, 'CAPABILITY_ERROR'); assert.match(sl.error.message, /escapes workspace/);
+  const sl2 = await call(p, { cwd: 'hosts_link', framework: 'custom', argv: ['node', '-e', '0'] }); assert.match(sl2.error.message, /escapes workspace/);
+  const inner = await call(p, { cwd: 'inner_link', framework: 'custom', argv: ['node', '-e', 'console.log("in")'] }); assert.equal(inner.output.exitCode, 0); assert.match(inner.output.outputTail, /in/);
 });
 test('empty dir + auto → CAPABILITY_ERROR "no test framework detected"; custom without argv → error', async () => {
   const p = new TestRunProvider({ root: tmp('empty') });

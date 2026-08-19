@@ -45,7 +45,7 @@ ssh.fetch { host:"web1", remotePath:"/var/log/nginx/error.log", localPath:"logs/
 
 ### ssh.fetch 入参
 
-`host` / `remotePath`（远程文件）/ `localPath`（**相对 `CAK_WORKSPACE`**，越界、绝对路径、指向工作区根都拒；父目录自动创建）/ `maxBytes`（默认 50MB，上限 1GB）。
+`host` / `remotePath`（远程文件）/ `localPath`（**相对 `CAK_WORKSPACE`**，越界、绝对路径、指向工作区根都拒，符号链接按真实目标再判一次——`ln -s /etc/hosts x` 这种不能借 fetch 覆盖；父目录自动创建）/ `maxBytes`（默认 50MB，上限 1GB）。
 
 流程：先 `stat -c %s -- <q> 2>/dev/null || stat -f %z -- <q>`（GNU 优先，失败退到 BSD/macOS 写法）拿大小，超 `maxBytes` 直接拒；再 `cat -- <q>` 流式落到 `localPath.part`，边收边计数，传输中超限立即杀进程、删半成品；成功后改名。出参：`host` / `remotePath` / `localPath` / `bytes`。
 

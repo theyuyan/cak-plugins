@@ -130,6 +130,13 @@ test('ssh.fetch localPath 越界 / 绝对路径 / 指向工作区根 → CAPABIL
   const p = mk();
   for (const lp of ['../x.txt', '/etc/passwd', 'a/../../x', '.', '']) { const r = await call(p, CONTRACT_FETCH, { host: 'web1', remotePath: '/etc/hostname', localPath: lp }); assert.equal(r.error?.code, 'CAPABILITY_ERROR', lp); assert.match(r.error.message, /escapes workspace/, lp); }
 });
+test('ssh.fetch localPath 符号链接越界：ln -s /etc/hosts link → 拒（不能借 fetch 覆盖 /etc/hosts）；目录 link 下的新文件 → 拒；指向工作区内的目录 link → 放行', async () => {
+  const ws = tmp('ws'); const outside = tmp('outside'); const p = mk({ root: ws });
+  fs.symlinkSync('/etc/hosts', path.join(ws, 'hosts_link')); fs.symlinkSync(outside, path.join(ws, 'dir_link')); fs.mkdirSync(path.join(ws, 'inner')); fs.symlinkSync(path.join(ws, 'inner'), path.join(ws, 'inner_link'));
+  const a = await call(p, CONTRACT_FETCH, { host: 'web1', remotePath: '/etc/hostname', localPath: 'hosts_link' }); assert.equal(a.error?.code, 'CAPABILITY_ERROR'); assert.match(a.error.message, /escapes workspace/); assert.equal(fs.readlinkSync(path.join(ws, 'hosts_link')), '/etc/hosts');
+  const b = await call(p, CONTRACT_FETCH, { host: 'web1', remotePath: '/etc/hostname', localPath: 'dir_link/new.txt' }); assert.match(b.error.message, /escapes workspace/); assert.equal(fs.readdirSync(outside).length, 0, '工作区外不得出现任何文件');
+  const c = await call(p, CONTRACT_FETCH, { host: 'web1', remotePath: '/etc/hostname', localPath: 'inner_link/ok.txt' }); assert.ok(c.output, JSON.stringify(c)); assert.equal(fs.readFileSync(path.join(ws, 'inner', 'ok.txt'), 'utf8'), 'hello world');
+});
 test('ssh.fetch 超大小 → CAPABILITY_ERROR（假 ssh 对 stat 返回大数）；传输中超限也拒并清理半成品；stat 失败 → 错误', async () => {
   const ws = tmp('ws'); const p = mk({ root: ws });
   const big = await call(p, CONTRACT_FETCH, { host: 'web1', remotePath: '/var/log/big.log', localPath: 'big.log' }); assert.equal(big.error?.code, 'CAPABILITY_ERROR'); assert.match(big.error.message, /too large: 999999999999 bytes > maxBytes 52428800/);

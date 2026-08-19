@@ -1,6 +1,6 @@
 // kb-local — CAK Capability Provider：本地知识库（kb.ingest@1 / kb.query@1 / kb.list@1）。
 // 把目录/文件切块存进 SQLite FTS5，用 BM25 做全文检索（不是向量检索，零外部依赖、不调 embedding API）。
-// 存放：KB_DIR（缺省 ~/.cak/kb）/<kb>.sqlite。CAK_WORKSPACE 存在时 paths/pathPrefix 只许在工作区内（越界 → CAPABILITY_ERROR）。
+// 存放：KB_DIR/<kb>.sqlite；KB_DIR 缺省 = CAK_DATA_DIR/kb（内核 conformance 传的临时目录）> <CAK_WORKSPACE>/.cak/kb（按工作区隔离，跟项目走）> ~/.cak/kb（无工作区的单机用法）。CAK_WORKSPACE 存在时 paths/pathPrefix 只许在工作区内（越界 → CAPABILITY_ERROR）。
 //
 // 分词：FTS5 trigram tokenizer（本机 node:sqlite 自带）——任意语言、大小写不敏感、子串匹配，中文天然可查。
 // 它的唯一短板是查询短语必须 ≥3 个字符（"备份"/"go" 这类 2 字词查不到），所以每块另存一列 grams：
@@ -79,11 +79,22 @@ const jsSnippet = (text: string, q: string, width = 80): string => {
 };
 
 export interface KbLocalOptions { dir?: string; workspace?: string }
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
+/** 库目录缺省值：CAK_DATA_DIR/kb > <workspace>/.cak/kb > ~/.cak/kb */
+export function defaultKbDir(workspace: string | undefined, env: NodeJS.ProcessEnv = process.env): string {
+  if (env['CAK_DATA_DIR']) return path.join(env['CAK_DATA_DIR'], 'kb');
+  if (workspace) return path.join(path.resolve(workspace), '.cak', 'kb');
+  return path.join(os.homedir(), '.cak', 'kb');
+}
 export class KbLocalProvider implements CapabilityProvider {
   readonly id = 'kb-local'; readonly dir: string; private readonly root: string | undefined; private dbs = new Map<string, any>();
   constructor(opts: KbLocalOptions = {}) {
-    this.dir = opts.dir ?? process.env['KB_DIR'] ?? path.join(os.homedir(), '.cak', 'kb');
     this.root = 'workspace' in opts ? opts.workspace : (process.env['CAK_WORKSPACE'] || undefined);
+    this.dir = opts.dir ?? process.env['KB_DIR'] ?? defaultKbDir(this.root);
   }
   listImplementations(): CapabilityImplementation[] { return [INGEST, QUERY, LIST].map(contract => ({ providerId: this.id, contract, priority: 50 })); }
 
@@ -100,9 +111,11 @@ export class KbLocalProvider implements CapabilityProvider {
   /** 路径墙：有 CAK_WORKSPACE 时只许工作区内（含符号链接的真实目标）；没有则任意 */
   private resolve(p: string): string {
     if (!this.root) return path.resolve(p);
-    const rootReal = fs.existsSync(this.root) ? fs.realpathSync(this.root) : path.resolve(this.root);
-    const abs = path.resolve(rootReal, p); const real = fs.existsSync(abs) ? fs.realpathSync(abs) : abs;
-    for (const cand of [abs, real]) { const rel = path.relative(rootReal, cand); if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`path ${p} escapes workspace`); }
+    const rootReal = realpathNearest(path.resolve(this.root));
+    const abs = path.resolve(rootReal, p); const rel = path.relative(rootReal, abs);
+    if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`path ${p} escapes workspace`);   // 字面判一次
+    const real = realpathNearest(abs); const relReal = path.relative(rootReal, real);                        // realpath 再判一次（不存在的目标按最近存在的祖先目录）
+    if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`path ${p} escapes workspace (symlink → ${real})`);
     return real;
   }
   private totalChunks(db: any): number { return Number(db.prepare('select coalesce(sum(chunks),0) n from files').get().n); }

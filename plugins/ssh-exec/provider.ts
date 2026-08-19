@@ -60,6 +60,11 @@ export const defaultSpawn: SpawnFn = (argv, opts) => new Promise((resolve, rejec
   child.on('close', code => { if (done) return; done = true; clearTimeout(timer); opts.signal?.removeEventListener('abort', onAbort); resolve({ exitCode: code ?? -1, timedOut, aborted, durationMs: Date.now() - t0, stdout: out, stderr: errText, truncated, ...(child.pid ? { pid: child.pid } : {}) }); });
 });
 
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
 export class SshExecProvider implements CapabilityProvider {
   readonly id = 'ssh-exec';
   private cfg: SshConfig; private root: string; private spawnFn: SpawnFn; private ssh: string[];
@@ -86,6 +91,9 @@ export class SshExecProvider implements CapabilityProvider {
   private resolveLocal(p: string): string {
     const abs = path.resolve(this.root, p); const rel = path.relative(this.root, abs);
     if (!p || rel === '' || rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`localPath ${p} escapes workspace（须为相对 CAK_WORKSPACE 的文件路径）`);
+    // 第二道：按真实路径（符号链接解析后）再判一次——工作区里 link → /etc/hosts 也拒；不存在的目标按最近存在的祖先目录判
+    const real = realpathNearest(abs); const relReal = path.relative(realpathNearest(this.root), real);
+    if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`localPath ${p} escapes workspace (symlink → ${real})`);
     return abs;
   }
   private budget(want: number, ctx: ProviderCallContext): number { return ctx.deadlineAtMs ? Math.max(200, Math.min(want, ctx.deadlineAtMs - Date.now() - 300)) : want; }

@@ -37,6 +37,11 @@ test('skill.read: 正文去 frontmatter、附件、files 列表、maxChars 截�
   const cut = await call(p, READ, { name: 'weekly-report', maxChars: 200 }); assert.equal(cut.output.truncated, false);
   const esc = await call(p, READ, { name: 'weekly-report', file: '../no-desc/SKILL.md' }); assert.match(esc.error.message, /escapes/);
   const abs = await call(p, READ, { name: 'weekly-report', file: '/etc/hosts' }); assert.match(abs.error.message, /escapes/);
+  // 符号链接越界：技能目录里 ln -s /etc/hosts link → 拒；目录 link → 拒；指向技能目录内的 link → 放行
+  const sdir = path.join(userDir, 'weekly-report'); fs.symlinkSync('/etc/hosts', path.join(sdir, 'hosts_link')); fs.symlinkSync(path.join(userDir, 'no-desc'), path.join(sdir, 'dir_link')); fs.symlinkSync(path.join(sdir, 'templates', 'weekly.md'), path.join(sdir, 'inner_link.md'));
+  const sl = await call(p, READ, { name: 'weekly-report', file: 'hosts_link' }); assert.equal(sl.error?.code, 'CAPABILITY_ERROR'); assert.match(sl.error.message, /escapes/);
+  const sl2 = await call(p, READ, { name: 'weekly-report', file: 'dir_link/SKILL.md' }); assert.match(sl2.error.message, /escapes/);
+  const inner = await call(p, READ, { name: 'weekly-report', file: 'inner_link.md' }); assert.equal(inner.output.text, '# 周报模板');
   const nf = await call(p, READ, { name: 'weekly-report', file: 'nope.md' }); assert.match(nf.error.message, /no such file/);
   const unk = await call(p, READ, { name: 'ghost' }); assert.match(unk.error.message, /unknown skill "ghost"；已装：incident-triage, project-conventions, weekly-report/);
 });

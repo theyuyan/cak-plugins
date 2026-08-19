@@ -97,7 +97,12 @@ test('mail.send: 本机 SMTP 真收一封；回复带 In-Reply-To/References/Re:
   const esc = await call(p, SEND, { to: ['a@example.test'], subject: 'x', text: 'y', attachPaths: [path.join(outside, 'secret.txt')] }); assert.equal(esc.error.code, 'CAPABILITY_ERROR'); assert.match(esc.error.message, /escapes workspace/); assert.equal(esc.error.retryable, false);
   const esc2 = await call(p, SEND, { to: ['a@example.test'], subject: 'x', text: 'y', attachPaths: ['../' + path.basename(outside) + '/secret.txt'] }); assert.match(esc2.error.message, /escapes workspace/);
   const miss = await call(p, SEND, { to: ['a@example.test'], subject: 'x', text: 'y', attachPaths: ['nope.bin'] }); assert.match(miss.error.message, /not a file/);
+  // 符号链接越界：工作区里 ln -s /etc/hosts link → 拒；目录 link 下的文件 → 拒；指向工作区内的 link → 放行
+  fs.symlinkSync('/etc/hosts', path.join(dir, 'hosts_link')); fs.symlinkSync(outside, path.join(dir, 'dir_link')); fs.symlinkSync(path.join(dir, 'note.txt'), path.join(dir, 'inner_link.txt'));
+  const sl = await call(p, SEND, { to: ['a@example.test'], subject: 'x', text: 'y', attachPaths: ['hosts_link'] }); assert.equal(sl.error?.code, 'CAPABILITY_ERROR'); assert.match(sl.error.message, /escapes workspace/); assert.equal(sl.error.retryable, false);
+  const sl2 = await call(p, SEND, { to: ['a@example.test'], subject: 'x', text: 'y', attachPaths: ['dir_link/secret.txt'] }); assert.match(sl2.error.message, /escapes workspace/);
   assert.equal(received.length, before, '越界/缺失附件时不得发出任何邮件');
+  const inner = await call(p, SEND, { to: ['a@example.test'], subject: 'inner', text: 'y', attachPaths: ['inner_link.txt'] }); assert.ok(!inner.error, JSON.stringify(inner)); assert.match(received.at(-1).raw, new RegExp(Buffer.from('attach me').toString('base64')));
   const na = await call(p, SEND, { account: 'nope', to: ['a@example.test'], subject: 'x', text: 'y' }); assert.match(na.error.message, /no account nope/);
   const nosmtp = await call(new EmailProvider({ config: { accounts: { d: { imap: cfg.accounts.default.imap } } }, imapFactory: (o) => new FakeImap(o) }), SEND, { account: 'd', to: ['a@example.test'], subject: 'x', text: 'y' }); assert.match(nosmtp.error.message, /no smtp config/);
 });

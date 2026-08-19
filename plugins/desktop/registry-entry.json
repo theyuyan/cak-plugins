@@ -2,7 +2,7 @@
   "id": "desktop",
   "version": "0.1.0",
   "kernelCompat": "^0.3.0",
-  "description": "桌面交互：弹系统通知（长任务跑完提醒）、用默认程序打开工作区内文件或 http(s) 网址、读/写系统剪贴板。macOS / Linux / Windows 都走系统自带命令，零依赖、无需配置。",
+  "description": "桌面交互（在用户屏幕上，用户能看见）：弹系统通知（长任务跑完提醒）、用系统默认程序打开工作区内文件或 http(s) 网址（用户说\"打开给我看\"就用它，不是无头的 browser.open）、读/写系统剪贴板。macOS / Linux / Windows 都走系统自带命令，零依赖、无需配置。",
   "license": "Apache-2.0",
   "install": {
     "type": "git",

@@ -30,7 +30,7 @@ npm run conformance      # 本机一致性测试（cak add 也会跑同一套）
 
 | 字段 | 说明 |
 |---|---|
-| `cwd` | 相对 `CAK_WORKSPACE` 的目录，缺省=工作区根。**不得越界** |
+| `cwd` | 相对 `CAK_WORKSPACE` 的目录，缺省=工作区根。**不得越界**（字面与 realpath 各判一次，指向工作区外的符号链接也拒） |
 | `framework` | `auto`（默认）/ `vitest` / `jest` / `mocha` / `node` / `pytest` / `go` / `cargo` / `npm` / `custom` |
 | `argv` | `framework=custom` 时必填：直接执行的命令数组，**不经 shell** |
 | `filter` | 只跑匹配的测试，按框架翻译（见下表）；custom 时忽略 |

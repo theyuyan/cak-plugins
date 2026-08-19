@@ -79,7 +79,16 @@ export function resolveTarget(target: string, root: string, exists: (p: string) 
   const abs = path.resolve(root, t); const rel = path.relative(root, abs);
   if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`路径 ${target} 越出工作区 ${root}`);
   if (!exists(abs)) throw new Error(`文件不存在：${rel || '.'}（相对工作区）`);
+  // 第二道：按真实路径（符号链接解析后）再判一次——工作区里 link → /etc/hosts 也拒（不存在的目标按最近存在的祖先目录判）
+  const real = realpathNearest(abs); const rootReal = realpathNearest(root);
+  const relReal = path.relative(rootReal, real);
+  if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`路径 ${target} 越出工作区（符号链接指向 ${real}，escapes workspace）`);
   return { kind: 'file', value: abs };
+}
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
 }
 /** 命令不存在时的安装提示 */
 export function installHint(cmd: string): string {

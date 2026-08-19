@@ -4,7 +4,7 @@
 
 ```
 npm install && npm run build && npm test
-npm run conformance      # 本机一致性测试（cak add 也会跑同一套；注意会留一条 conformance-test，见"配置"）
+npm run conformance      # 本机一致性测试（cak add 也会跑同一套；带 CAK_DATA_DIR=<临时目录> 就不会碰 ~/.cak，见"配置"）
 ```
 
 ## 干什么
@@ -70,6 +70,7 @@ webhook.create {name:"phone", prompt:"手机上发来的一句话，照办：{{j
 
 | 请求 | 响应 |
 |---|---|
+| `GET /` | `200 {"cak":"webhook","ok":true}`（同机另一实例用来判断"这端口是不是本插件"；不含任何 hook 信息） |
 | `GET /h/<name>/<token>` | `200` 纯文本 `ok`（外部系统探活用） |
 | `POST /h/<name>/<token>` | 投递成功 `202 {"ok":true}`；daemon 不在/拒绝 `503 {"ok":false,"error":"agent unavailable"}` |
 | 名字不存在 **或** token 错 | `404`（两种情况**同一响应**，不区分；token 常量时间比对） |
@@ -82,13 +83,13 @@ webhook.create {name:"phone", prompt:"手机上发来的一句话，照办：{{j
 ## 配置
 
 不需要配置文件。环境变量（宿主启动插件时继承）：
-- `WEBHOOK_DIR`：数据目录，默认 `~/.cak/webhook/`，文件 `hooks.json`（0600，原子写；损坏文件另存 `.bad-<ts>` 后从空开始）。存**端口 + hooks**；token 只存 sha256，文件泄露不等于 URL 泄露，但也意味着**丢了 URL 没法找回，只能 delete 重建**。
-- `WEBHOOK_PORT`：固定端口。缺省第一次 create 时随机取 40000-49999 并写进文件，之后一直用它（URL 稳定）。端口被占（比如两个内核进程各跑一份本插件）→ create 返回 `CAPABILITY_ERROR`、`webhook.list` 里 `listening:false`。
+- `WEBHOOK_DIR`：数据目录，默认 `~/.cak/webhook/`；**设了 `CAK_DATA_DIR` 则默认变成 `$CAK_DATA_DIR/webhook/`**（内核跑 conformance 时用临时目录传它，测试数据就不进用户真实的 `~/.cak`；`WEBHOOK_DIR` 优先级更高）。文件 `hooks.json`（0600，原子写；损坏文件另存 `.bad-<ts>` 后从空开始）。存**端口 + hooks**；token 只存 sha256，文件泄露不等于 URL 泄露，但也意味着**丢了 URL 没法找回，只能 delete 重建**。
+- `WEBHOOK_PORT`：强制端口。缺省第一次 create 时随机取 40000-49999 并写进文件，之后一直用它（URL 稳定）。**同机多内核**（几个内核进程各跑一份本插件、共用 `hooks.json`）：起监听撞 `EADDRINUSE` 时先 `GET http://127.0.0.1:<port>/` 探测——回 `{"cak":"webhook","ok":true}` 说明是另一实例在听，本进程进**客户端模式**（create/list/delete 只读写共享文件、不监听；监听方每次请求都重读文件，投递按 hook 记录的 workspace 找 daemon）→ 任一内核 create 都成功、任一内核在跑请求都能进；监听方退出后，下一次 create 探测不到它就自己接管同一端口。端口被**别的程序**占着 → 未设 `WEBHOOK_PORT` 时随机换一个（40000-49999，最多再试 5 次）并写回文件；设了 `WEBHOOK_PORT` 就 `CAPABILITY_ERROR`。
 - `WEBHOOK_BIND`：监听地址，默认 `127.0.0.1`。**只有显式设成 `0.0.0.0` 才对外**——见安全边界。
 - `WEBHOOK_PUBLIC_URL`：可选，出参 url 的前缀（如 `https://hooks.example.internal/agent`），给前面挂了反代的场景用；不设就是 `http://127.0.0.1:<port>`。
 - `CAK_WORKSPACE`：宿主自动传入。hook 记住创建时的 workspace，投递时优先找同 workspace 的 daemon。
 
-**conformance / `cak add` 会真的建一条 `conformance-test`** 留在 `hooks.json` 里并起监听（这一步没法用 `WEBHOOK_DIR` 隔离）。跑完用 `webhook.delete {name:"conformance-test"}` 删掉，或干脆删掉 `~/.cak/webhook/` 目录（里面没有别的东西）。
+**conformance / `cak add` 会真的建一条 `conformance-test`** 并起监听——所以要么由内核带 `CAK_DATA_DIR=<临时目录>` 跑（推荐，`cak add` 就是这么做的），要么跑完用 `webhook.delete {name:"conformance-test"}` 删掉。
 
 怎么找 daemon（与 schedule 一致）：读 `~/.cak/daemon/*.json`（内核启动时写的 url/token/agents/defaultAgent/workspace），优先取 `workspace` 匹配的，没有就取最新修改的，pid 已死的跳过。投递 = `POST <url>/rpc` 带 `x-cak-token`，方法 `session.input`，参数 `{text:"[webhook <name>] <渲染文本>", agent?}`；`agent` 不在 daemon 的 agents 列表里 → 503 + `lastError` 说明。
 
@@ -111,5 +112,5 @@ webhook.create {name:"phone", prompt:"手机上发来的一句话，照办：{{j
 - **内核进程不在时回 503**，请求不排队不补发。
 - **无 TLS**、无签名校验、无来源限制——这些都留给反代。
 - **没在公网真跑过**：test.mjs 用本机 http server 假装 daemon 控制面，验证的是协议形状（`/rpc`、`x-cak-token`、`session.input` 的 params，与 schedule 插件同源）与全部 HTTP 状态码路径；三个用法示例的 CI / 监控 / 快捷指令一侧没有在自动测试里跑，只按各家公开文档写的请求形状。真内核端到端"POST 一下 agent 真被叫醒"需要在 `cak up` 里装上再试。
-- 同一台机器上两个内核进程都装了本插件、共用默认 `WEBHOOK_DIR` 时，只有先起来的那个能绑端口，另一个 create 会报端口被占（`WEBHOOK_DIR` / `WEBHOOK_PORT` 分开即可）。
+- 同机多内核共用 `hooks.json`：每次"读-改-原子写"都先抢 `hooks.json.lock`（O_EXCL，最多等 ~1s，超过 5s 的遗留锁强清），两个进程同时 create/delete/记命中不会互相盖掉；测试里只跑了同进程两个实例 + 真 EADDRINUSE，没跑过两个真内核进程长期并发。要绝对隔离仍可 `WEBHOOK_DIR` 分开。
 - 请求体按 UTF-8 文本处理，二进制 body 不支持（会变乱码文本进模板）。

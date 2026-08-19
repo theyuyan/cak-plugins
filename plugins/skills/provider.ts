@@ -70,6 +70,11 @@ function listFiles(dir: string, max = 100): string[] {
   walk(dir, '', 0); return out.sort();
 }
 
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
 export class SkillsProvider implements CapabilityProvider {
   readonly id = 'skills';
   constructor(private opts: SkillsOptions = {}) {}
@@ -90,8 +95,8 @@ export class SkillsProvider implements CapabilityProvider {
         const name = String(a['name']); const s = skills.find(x => x.name === name);
         if (!s) return err(`unknown skill "${name}"；已装：${skills.map(x => x.name).join(', ') || '（无）'}`);
         const rel = a['file'] ? String(a['file']) : 'SKILL.md';
-        const abs = path.resolve(s.dir, rel); const real = fs.existsSync(abs) ? fs.realpathSync(abs) : abs;
-        if (path.relative(s.dir, real).startsWith('..') || path.isAbsolute(path.relative(s.dir, real))) return err(`file ${rel} escapes skill dir`);
+        const abs = path.resolve(s.dir, rel); const real = realpathNearest(abs);   // s.dir 已是 realpath；字面判一次、realpath（符号链接解析后）再判一次
+        for (const cand of [abs, real]) { const r = path.relative(s.dir, cand); if (r.startsWith('..') || path.isAbsolute(r)) return err(`file ${rel} escapes skill dir${cand === real && real !== abs ? ` (symlink → ${real})` : ''}`); }
         if (!fs.existsSync(real) || fs.statSync(real).isDirectory()) return err(`no such file in skill ${name}: ${rel}`);
         const buf = fs.readFileSync(real); if (buf.includes(0)) return err(`${rel} is binary`);
         const max = Number(a['maxChars'] ?? 40000); let text = buf.toString('utf8'); if (rel === 'SKILL.md') text = parseFrontmatter(text).body.trim();

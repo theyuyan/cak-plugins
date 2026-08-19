@@ -1,7 +1,7 @@
 // schedule — CAK Capability Provider：schedule.create@1 / schedule.list@1 / schedule.cancel@1。
 // 给 agent 定闹钟：到点时把一句话作为"用户输入"投递给某个 agent 会话（daemon 控制面 RPC session.input），把它叫醒接着干。
 // 它只是"叫醒"，不是"后台执行"：真正干活的是被叫醒的 agent，审批链照走。内核进程不在时不会触发（没有 launchd/cron 集成）。
-// 持久化：~/.cak/schedule/jobs.json（SCHEDULE_DIR 可改），原子写；运行器在本进程内 setTimeout 到最近的一个 job（不轮询）。
+// 持久化：~/.cak/schedule/jobs.json（SCHEDULE_DIR 可改；设了 CAK_DATA_DIR 则 $CAK_DATA_DIR/schedule/），原子写；运行器在本进程内 setTimeout 到最近的一个 job（不轮询）。
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os'; import { randomBytes } from 'node:crypto';
 import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
@@ -79,7 +79,7 @@ export class ScheduleProvider implements CapabilityProvider {
   constructor(o: ProviderOptions = {}) {
     this.now = o.now ?? (() => new Date()); this.fetchImpl = o.fetchImpl ?? fetch; this.log = o.log ?? (() => {});
     this.daemonInfoDir = o.daemonInfoDir ?? path.join(os.homedir(), '.cak', 'daemon');
-    this.file = path.join(o.dir ?? process.env['SCHEDULE_DIR'] ?? path.join(os.homedir(), '.cak', 'schedule'), 'jobs.json');
+    this.file = path.join(o.dir ?? process.env['SCHEDULE_DIR'] ?? (process.env['CAK_DATA_DIR'] ? path.join(process.env['CAK_DATA_DIR'], 'schedule') : path.join(os.homedir(), '.cak', 'schedule')), 'jobs.json');
     this.workspace = o.workspace ?? (process.env['CAK_WORKSPACE'] || undefined);
     this.ready = this.recover().catch(e => this.log(`recover failed: ${(e as Error).message}`)).then(() => this.arm());
   }

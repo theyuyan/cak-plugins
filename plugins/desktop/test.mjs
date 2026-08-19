@@ -112,6 +112,20 @@ test('resolveTarget：越界拒、file:/javascript: 拒、http 通过、相对�
   // Windows 盘符不是 scheme（单字母）
   assert.throws(() => resolveTarget('C:\\Windows\\notepad.exe', ws), /越出工作区|文件不存在/);
 });
+test('符号链接越界（F-ops-1）：工作区里 link → /etc/hosts、link → 工作区外目录、目录 link 下的文件 一律拒；工作区内的 link 放行', async () => {
+  fs.symlinkSync('/etc/hosts', path.join(ws, 'hosts_link'));                     // 文件 link → 工作区外
+  fs.symlinkSync(outside, path.join(ws, 'dir_link'));                            // 目录 link → 工作区外
+  fs.symlinkSync(path.join(ws, 'sub', 'a.txt'), path.join(ws, 'inner_link'));   // link → 工作区内
+  assert.throws(() => resolveTarget('hosts_link', ws), /越出工作区.*escapes/);
+  assert.throws(() => resolveTarget('dir_link/secret.txt', ws), /越出工作区.*escapes/);
+  assert.deepEqual(resolveTarget('inner_link', ws), { kind: 'file', value: path.join(ws, 'inner_link') });
+  const sp = fakeSpawn(); const p = mk('darwin', sp);
+  const r = await call(p, CONTRACT_OPEN, { target: 'hosts_link' }); assert.equal(r.error.code, 'CAPABILITY_ERROR'); assert.match(r.error.message, /越出工作区/); assert.match(r.error.message, /escapes/);
+  assert.equal(sp.calls.length, 0);   // 没有真去 open
+  // 工作区本身是符号链接（macOS /tmp → /private/tmp）时，工作区内文件仍放行
+  const wsLink = path.join(os.tmpdir(), 'desktop-wslink-' + process.pid); fs.symlinkSync(ws, wsLink);
+  try { assert.deepEqual(resolveTarget('sub/a.txt', wsLink), { kind: 'file', value: path.join(wsLink, 'sub', 'a.txt') }); assert.throws(() => resolveTarget('hosts_link', wsLink), /escapes/); } finally { fs.unlinkSync(wsLink); }
+});
 test('open 经 provider：越界/坏 scheme 不 spawn；dry-run 不 spawn 且 method=dry-run；DESKTOP_DRY_RUN 环境变量生效', async () => {
   const sp = fakeSpawn(); const p = mk('darwin', sp);
   const a = await call(p, CONTRACT_OPEN, { target: '../x' }); assert.equal(a.error.code, 'CAPABILITY_ERROR'); assert.match(a.error.message, /越出工作区/);

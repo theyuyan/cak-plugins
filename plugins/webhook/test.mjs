@@ -139,6 +139,39 @@ test('⑤ 重启恢复：new Provider 读文件后自动监听同端口、旧 ur
   assert.equal((await call(p4, CONTRACT_LIST, {})).output.listening, false); blocker.close();
 });
 
+test('⑦ 同机多内核（F-ops-2）：两个 Provider 同一 dir，第二个不报错进客户端模式；通过第一个的监听 POST 第二个建的 hook 能投递到；GET / 回签名；对方停掉后自己接管；端口被别的程序占着 → 换端口写回', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wh-multi-'));
+  const A = new WebhookProvider({ dir, daemonInfoDir: daemonDir, workspace: WS }); providers.push(A);
+  const ca = await call(A, CONTRACT_CREATE, { name: 'from-a', prompt: 'A 收到 {{body}}' }); assert.ok(ca.output, JSON.stringify(ca)); const port = A.port; assert.equal(A.clientMode, false);
+  // GET / 签名
+  const sig = await (await fetch(`http://127.0.0.1:${port}/`)).json(); assert.deepEqual(sig, { cak: 'webhook', ok: true });
+  // 第二个内核的实例：同一 dir（文件里记着 port）→ 启动恢复时端口被 A 占 → 探测是本插件 → 客户端模式，不报错
+  const B = new WebhookProvider({ dir, daemonInfoDir: daemonDir, workspace: WS }); providers.push(B); await B.ready;
+  assert.equal(B.clientMode, true); assert.equal(B.port, port);
+  const cb = await call(B, CONTRACT_CREATE, { name: 'from-b', prompt: 'B 收到 {{json.msg}}' }); assert.ok(cb.output, JSON.stringify(cb)); assert.equal(new URL(cb.output.url).port, String(port));
+  // 通过 A 的监听打 B 建的 hook → 假 daemon 收到
+  const n0 = received.length; const r = await post(cb.output.url, { msg: '磁盘 90%' }); assert.equal(r.status, 202); assert.equal(received.length, n0 + 1); assert.equal(received.at(-1).params.text, '[webhook from-b] B 收到 磁盘 90%');
+  // 两边 list 都看得到两条；B 显示 listening=true（有人在听）
+  const la = await call(A, CONTRACT_LIST, {}); assert.deepEqual(la.output.hooks.map(h => h.name), ['from-a', 'from-b']); assert.equal(la.output.hooks[1].hits, 1);
+  const lb = await call(B, CONTRACT_LIST, {}); assert.equal(lb.output.listening, true); assert.equal(lb.output.baseUrl, `http://127.0.0.1:${port}`); assert.equal(lb.output.hooks.length, 2);
+  // B 删自己的 hook 不影响 A 的监听；A 的 hook 仍可打
+  assert.deepEqual((await call(B, CONTRACT_DELETE, { name: 'from-b' })).output, { name: 'from-b', deleted: true }); assert.equal((await post(cb.output.url, 'x')).status, 404); assert.equal((await post(ca.output.url, 'x')).status, 202);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'hooks.json'), 'utf8')).port, port, '客户端模式不得改写共享文件里的端口');
+  // A 停掉（内核退出）→ B 下一次 create 探测到对方没了 → 自己在同一端口监听
+  await A.close(); assert.equal(B.clientMode, true);
+  const cb2 = await call(B, CONTRACT_CREATE, { name: 'from-b2', prompt: '{{body}}' }); assert.ok(cb2.output, JSON.stringify(cb2)); assert.equal(B.clientMode, false); assert.equal(B.port, port);
+  assert.equal((await post(cb2.output.url, 'takeover')).status, 202); assert.equal(received.at(-1).params.text, '[webhook from-b2] takeover');
+  assert.equal((await post(ca.output.url, 'x')).status, 202, 'A 建的 hook 在 B 接管后仍可用（共享文件）');
+  await B.close();
+  // 文件里的端口被"别的程序"占着（不是本插件）→ 非强制端口时换一个随机端口并写回文件
+  const blocker = http.createServer((q, s) => { s.statusCode = 200; s.end('i am not webhook'); }); await new Promise(r => blocker.listen(port, '127.0.0.1', r));
+  const C = new WebhookProvider({ dir, daemonInfoDir: daemonDir, workspace: WS }); providers.push(C); await C.ready;
+  assert.equal(C.clientMode, false); assert.ok(C.port !== undefined && C.port !== port, `应换端口（得到 ${C.port}）`); assert.ok(C.port >= 40000 && C.port < 50000);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(dir, 'hooks.json'), 'utf8')).port, C.port, '换了端口要写回文件');
+  const cc = await call(C, CONTRACT_CREATE, { name: 'from-c', prompt: '{{body}}' }); assert.equal(new URL(cc.output.url).port, String(C.port)); assert.equal((await post(cc.output.url, 'c')).status, 202);
+  blocker.close();
+});
+
 test('⑥ 坏名字 / 坏参数 → CAPABILITY_ERROR', async () => {
   const p = P();
   for (const name of ['Bad', 'has space', 'a_b', '', 'x'.repeat(33), '../etc', 'ü']) { const e = await call(p, CONTRACT_CREATE, { name, prompt: 'x' }); assert.equal(e.error?.code, 'CAPABILITY_ERROR', name); assert.match(e.error.message, /name 不合法/); }
@@ -146,6 +179,19 @@ test('⑥ 坏名字 / 坏参数 → CAPABILITY_ERROR', async () => {
   const e3 = await call(p, CONTRACT_CREATE, { name: 'ok', prompt: 'x', maxBodyBytes: 0 }); assert.equal(e3.error.code, 'CAPABILITY_ERROR');
   const e4 = await call(p, CONTRACT_CREATE, { name: 'ok', prompt: 'x', rateLimitPerMinute: 1.5 }); assert.equal(e4.error.code, 'CAPABILITY_ERROR');
   assert.equal((await call(p, CONTRACT_LIST, {})).output.listening, false, '全部被拒时不该起监听');
+});
+
+test('⑧ CAK_DATA_DIR（F-ops-3）：设了就把 hooks.json 放 $CAK_DATA_DIR/webhook/；WEBHOOK_DIR 优先级更高', async () => {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cak-data-')); const prev = { d: process.env.CAK_DATA_DIR, w: process.env.WEBHOOK_DIR };
+  process.env.CAK_DATA_DIR = dataDir; delete process.env.WEBHOOK_DIR;
+  try {
+    const p = new WebhookProvider({ daemonInfoDir: daemonDir, workspace: WS }); providers.push(p);
+    const c = await call(p, CONTRACT_CREATE, { name: 'data-dir', prompt: '{{body}}' }); assert.ok(c.output, JSON.stringify(c));
+    const f = path.join(dataDir, 'webhook', 'hooks.json'); assert.ok(fs.existsSync(f), `应写到 ${f}`); assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).hooks[0].name, 'data-dir');
+    await call(p, CONTRACT_DELETE, { name: 'data-dir' });
+    const wd = fs.mkdtempSync(path.join(os.tmpdir(), 'wh-env-')); process.env.WEBHOOK_DIR = wd;
+    const p2 = new WebhookProvider({ daemonInfoDir: daemonDir, workspace: WS }); providers.push(p2); await call(p2, CONTRACT_CREATE, { name: 'env-dir', prompt: 'x' }); assert.ok(fs.existsSync(path.join(wd, 'hooks.json'))); await call(p2, CONTRACT_DELETE, { name: 'env-dir' });
+  } finally { if (prev.d === undefined) delete process.env.CAK_DATA_DIR; else process.env.CAK_DATA_DIR = prev.d; if (prev.w === undefined) delete process.env.WEBHOOK_DIR; else process.env.WEBHOOK_DIR = prev.w; }
 });
 
 test.after(async () => { for (const p of providers) await p.close(); srv.close(); });

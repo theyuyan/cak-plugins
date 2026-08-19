@@ -15,6 +15,11 @@ export function toMarkdown(rows: unknown[][]): string {
   return [`| ${head.join(' | ')} |`, `| ${head.map(() => '---').join(' | ')} |`, ...rest.map(r => `| ${(r as unknown[]).map(cell).join(' | ')} |`)].join('\n');
 }
 
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
 export class DocReadProvider implements CapabilityProvider {
   readonly id = 'doc-read';
   constructor(private root: string | undefined = process.env['CAK_WORKSPACE'] || undefined) {}
@@ -23,6 +28,9 @@ export class DocReadProvider implements CapabilityProvider {
     if (!this.root) return path.resolve(p);
     const abs = path.resolve(this.root, p); const rel = path.relative(this.root, abs);
     if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`path ${p} escapes workspace`);
+    // 第二道：按真实路径（符号链接解析后）再判一次——工作区里 link → /etc/hosts 也拒；不存在的目标按最近存在的祖先目录判
+    const real = realpathNearest(abs); const relReal = path.relative(realpathNearest(this.root), real);
+    if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`path ${p} escapes workspace (symlink → ${real})`);
     return abs;
   }
   async execute(inv: AuthorizedInvocation, _ctx: ProviderCallContext): Promise<ProviderExecuteResult> {

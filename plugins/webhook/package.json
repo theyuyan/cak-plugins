@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p .",
-    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.list --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.create --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"name\":\"conformance-test\",\"prompt\":\"收到：{{body}}\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.delete --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"name\":\"nonexistent\"}'",
+    "conformance": "export CAK_DATA_DIR=\"${CAK_DATA_DIR:-$(mktemp -d)}\"; npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.list --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.create --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"name\":\"conformance-test\",\"prompt\":\"收到：{{body}}\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract webhook.delete --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"name\":\"nonexistent\"}'",
     "test": "node --test test.mjs"
   },
   "dependencies": {

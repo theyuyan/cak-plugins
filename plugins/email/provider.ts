@@ -76,6 +76,11 @@ const err = (message: string, retryable = false): ProviderExecuteResult => ({ er
 /** 把 promise 套上超时（IMAP 库自己的超时之外再兜一层，保证 conformance 5s 内一定有结果的场景是「无配置直接报错」；有配置时以 15s 为限） */
 const withTimeout = <T,>(p: Promise<T>, ms: number, what: string) => new Promise<T>((res, rej) => { const t = setTimeout(() => rej(new Error(`${what} timeout after ${ms}ms`)), ms); p.then(v => { clearTimeout(t); res(v); }, e => { clearTimeout(t); rej(e); }); });
 
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
 export class EmailProvider implements CapabilityProvider {
   readonly id = 'email';
   private cfg: MailConfig; private imapFactory: ImapFactory; private transportFactory: TransportFactory; private root: string;
@@ -96,6 +101,9 @@ export class EmailProvider implements CapabilityProvider {
   private resolveAttach(p: string): string {
     const abs = path.resolve(this.root, p); const rel = path.relative(this.root, abs);
     if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`attachment ${p} escapes workspace ${this.root}`);
+    // 第二道：按真实路径（符号链接解析后）再判一次——工作区里 link → /etc/hosts 也拒
+    const real = realpathNearest(abs); const relReal = path.relative(realpathNearest(this.root), real);
+    if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`attachment ${p} escapes workspace (symlink → ${real})`);
     if (!fs.existsSync(abs) || fs.statSync(abs).isDirectory()) throw new Error(`attachment not a file: ${p}`);
     return abs;
   }

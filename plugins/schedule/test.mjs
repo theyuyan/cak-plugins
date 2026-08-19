@@ -133,4 +133,17 @@ test('⑥ 坏参数 → CAPABILITY_ERROR；cancel 未知 id → CAPABILITY_ERROR
   await call(p, CONTRACT_CANCEL, { id: ok.output.id }); await call(p, CONTRACT_CANCEL, { id: ok2.output.id });
 });
 
+test('⑦ CAK_DATA_DIR（F-ops-3）：设了就把 jobs.json 放 $CAK_DATA_DIR/schedule/，不碰 ~/.cak；SCHEDULE_DIR 优先级更高', async () => {
+  const dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cak-data-')); const prev = { d: process.env.CAK_DATA_DIR, s: process.env.SCHEDULE_DIR };
+  process.env.CAK_DATA_DIR = dataDir; delete process.env.SCHEDULE_DIR;
+  try {
+    const p = new ScheduleProvider({ daemonInfoDir: daemonDir, workspace: WS }); providers.push(p);
+    const c = await call(p, CONTRACT_CREATE, { text: 'data-dir 测试', inMinutes: 600 }); assert.ok(c.output, JSON.stringify(c));
+    const f = path.join(dataDir, 'schedule', 'jobs.json'); assert.ok(fs.existsSync(f), `应写到 ${f}`); assert.equal(JSON.parse(fs.readFileSync(f, 'utf8')).jobs[0].text, 'data-dir 测试');
+    await call(p, CONTRACT_CANCEL, { id: c.output.id });
+    const sd = fs.mkdtempSync(path.join(os.tmpdir(), 'sched-env-')); process.env.SCHEDULE_DIR = sd;
+    const p2 = new ScheduleProvider({ daemonInfoDir: daemonDir, workspace: WS }); providers.push(p2); const c2 = await call(p2, CONTRACT_CREATE, { text: 'x', inMinutes: 600 }); assert.ok(fs.existsSync(path.join(sd, 'jobs.json'))); await call(p2, CONTRACT_CANCEL, { id: c2.output.id });
+  } finally { if (prev.d === undefined) delete process.env.CAK_DATA_DIR; else process.env.CAK_DATA_DIR = prev.d; if (prev.s === undefined) delete process.env.SCHEDULE_DIR; else process.env.SCHEDULE_DIR = prev.s; }
+});
+
 test.after(() => { for (const p of providers) p.close(); srv.close(); });

@@ -101,6 +101,10 @@ test('docx: overwrite=false → error; overwrite=true → ok; escapes / ext / mi
   fs.symlinkSync(outside, path.join(ws, 'link-out'));
   const sym = await call(p, DOCX, { outPath: 'link-out/s.docx', markdown: '# x' }); assert.match(sym.error.message, /outside workspace/);
   const symImg = await call(p, DOCX, { outPath: 'out/si.docx', markdown: '![x](link-out/secret.png)' }); assert.match(symImg.error.message, /outside workspace/);
+  // 文件级 link：ln -s /etc/hosts hosts_link.docx → outPath 拒（overwrite:true 也不行）；作为图片源也拒
+  fs.symlinkSync('/etc/hosts', path.join(ws, 'hosts_link.docx')); fs.symlinkSync('/etc/hosts', path.join(ws, 'hosts_link.png'));
+  const hl = await call(p, DOCX, { outPath: 'hosts_link.docx', markdown: '# x', overwrite: true }); assert.equal(hl.error?.code, 'CAPABILITY_ERROR'); assert.match(hl.error.message, /escapes workspace/); assert.equal(fs.readlinkSync(path.join(ws, 'hosts_link.docx')), '/etc/hosts');
+  const hlImg = await call(p, DOCX, { outPath: 'out/hl.docx', markdown: '![x](hosts_link.png)' }); assert.match(hlImg.error.message, /escapes workspace/);
 });
 
 test('docx: jpg image + no CAK_WORKSPACE → cwd is root', async () => {

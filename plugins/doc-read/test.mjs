@@ -38,3 +38,13 @@ test('workspace boundary', async () => {
   const r2 = await call(p, { path: '/etc/passwd' }); assert.match(r2.error.message, /escapes workspace/);
   const free = new DocReadProvider(undefined); const r3 = await call(free, { path: path.join(dir, 'a.pdf') }); assert.equal(r3.output.format, 'pdf');   // 无 CAK_WORKSPACE 时允许绝对路径
 });
+test('symlink escape (F-redteam-03 同类)：工作区里 ln -s /etc/hosts link → 拒；目录 link 下的文件 → 拒；指向工作区内的 link → 放行', async () => {
+  const p = new DocReadProvider(dir); const outside = fs.mkdtempSync(path.join(os.tmpdir(), 'docread-out-')); fs.writeFileSync(path.join(outside, 'secret.txt'), 'top');
+  fs.symlinkSync('/etc/hosts', path.join(dir, 'link')); fs.symlinkSync(outside, path.join(dir, 'dir_link')); fs.symlinkSync(path.join(dir, 's.csv'), path.join(dir, 'inner_link.csv'));
+  const r = await call(p, { path: 'link' }); assert.equal(r.error?.code, 'CAPABILITY_ERROR'); assert.match(r.error.message, /escapes workspace/);
+  const r2 = await call(p, { path: 'dir_link/secret.txt' }); assert.match(r2.error.message, /escapes workspace/);
+  const ok = await call(p, { path: 'inner_link.csv' }); assert.equal(ok.output.format, 'csv');
+  // 工作区本身是符号链接（macOS /tmp → /private/tmp）时不误杀
+  const wsLink = path.join(os.tmpdir(), 'docread-wslink-' + process.pid); fs.symlinkSync(dir, wsLink);
+  try { const p2 = new DocReadProvider(wsLink); const ok2 = await call(p2, { path: 's.csv' }); assert.equal(ok2.output.format, 'csv'); const bad = await call(p2, { path: 'link' }); assert.match(bad.error.message, /escapes/); } finally { fs.unlinkSync(wsLink); }
+});

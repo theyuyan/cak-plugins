@@ -126,8 +126,10 @@ export class DocWriteProvider implements CapabilityProvider {
     if (rel.startsWith('..') || path.isAbsolute(rel)) throw new UserError(`${what} ${p} escapes workspace ${this.root}`);
     // 符号链接按真实目标判断：找到最近的已存在祖先做 realpath，仍须在工作区（realpath）内
     let probe = abs; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
-    const realRel = path.relative(fs.realpathSync(this.root), fs.realpathSync(probe));
-    if (realRel.startsWith('..') || path.isAbsolute(realRel)) throw new UserError(`${what} ${p} resolves outside workspace (symlink)`);
+    let real = probe; try { real = fs.realpathSync(probe); } catch { /* 取不到 realpath 就按字面 */ }
+    let rootReal = this.root; try { rootReal = fs.realpathSync(this.root); } catch { /* 同上 */ }
+    const realRel = path.relative(rootReal, real);
+    if (realRel.startsWith('..') || path.isAbsolute(realRel)) throw new UserError(`${what} ${p} escapes workspace (symlink → ${real}, resolves outside workspace)`);
     return abs;
   }
   /** 输出路径：扩展名 / 越界 / 已存在 三道检查，然后建父目录 */

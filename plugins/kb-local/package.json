@@ -5,7 +5,7 @@
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc -p .",
-    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.list --args '{}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.query --args '{\"q\":\"hello\",\"limit\":3}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.ingest --args '{\"paths\":[\"README.md\"]}'",
+    "conformance": "export CAK_DATA_DIR=\"${CAK_DATA_DIR:-$(mktemp -d)}\"; npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.list --args '{}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.query --args '{\"q\":\"hello\",\"limit\":3}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract kb.ingest --args '{\"paths\":[\"README.md\"]}'",
     "test": "node --test test.mjs"
   },
   "dependencies": {

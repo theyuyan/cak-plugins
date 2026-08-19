@@ -4,7 +4,7 @@
 
 ```
 npm install && npm run build && npm test
-npm run conformance      # 本机一致性测试（cak add 也会跑同一套）
+npm run conformance      # 本机一致性测试（cak add 也会跑同一套；带 CAK_DATA_DIR=<临时目录>，不碰 ~/.cak）
 ```
 
 ## 干什么
@@ -35,7 +35,7 @@ npm run conformance      # 本机一致性测试（cak add 也会跑同一套）
 ## 配置
 
 不需要配置文件。两个环境变量：
-- `SCHEDULE_DIR`：任务文件目录，默认 `~/.cak/schedule/`，文件 `jobs.json`（原子写：写临时文件再 rename，损坏文件会另存 `.bad-<ts>` 后从空开始）。**conformance 的 sampleArgs 会真的建两条 600 分钟后的任务留在这个文件里**（`cak add` 时同样）；不想污染就跑前设 `SCHEDULE_DIR=/tmp/xxx`，或事后 `schedule.cancel`。
+- `SCHEDULE_DIR`：任务文件目录，默认 `~/.cak/schedule/`；**设了 `CAK_DATA_DIR` 则默认变成 `$CAK_DATA_DIR/schedule/`**（内核跑 conformance / `cak add` 时传临时目录，测试建的任务就不进用户真实的 `~/.cak`；`SCHEDULE_DIR` 优先级更高）。文件 `jobs.json`（原子写：写临时文件再 rename，损坏文件会另存 `.bad-<ts>` 后从空开始）。conformance 的 sampleArgs 会真的建一条 600 分钟后的任务——所以要么带 `CAK_DATA_DIR`（`npm run conformance` 已自带临时目录），要么事后 `schedule.cancel`。
 - `CAK_WORKSPACE`：宿主启动插件时自动传入。任务会打上创建时的 workspace 标记，只由同 workspace 的内核投递/列出/取消（防止两个内核进程各跑一份插件时重复投递）。
 
 怎么找到"自己所属"的 daemon：读 `~/.cak/daemon/*.json`（内核启动时写的 url/token/agents/defaultAgent/workspace），优先取 `workspace` 等于 `CAK_WORKSPACE` 的；没有就取最新修改的；pid 已死的跳过。投递 = `POST <url>/rpc` 带 `x-cak-token`，方法 `session.input`，参数 `{text:"[定时任务 <id>] <text>", agent?}`。

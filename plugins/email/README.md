@@ -49,7 +49,7 @@ npm run conformance      # 三个契约各跑一遍内核一致性测试（无�
 
 - **发信是 external，默认走人审批**；模型看得到 to/cc/subject/text/附件路径，看不到任何服务器地址与密码。
 - **密码不进模型上下文**：只在 provider 进程里从 `passFile` 读出交给 IMAP/SMTP 客户端；出参里没有它，错误信息里也不会回显。
-- **附件只允许工作区内文件**：`attachPaths` 相对 `CAK_WORKSPACE` 解析（宿主没传时以插件进程当前目录为界，**不会**放开为任意路径）；越界或不是文件 → `CAPABILITY_ERROR`，而且是**先校验附件再连服务器**，越界时一封都不会发出去。
+- **附件只允许工作区内文件**：`attachPaths` 相对 `CAK_WORKSPACE` 解析（宿主没传时以插件进程当前目录为界，**不会**放开为任意路径），字面判一次、realpath（符号链接解析后）再判一次——工作区里 `ln -s ~/.ssh/id_rsa key` 这种也拒；越界或不是文件 → `CAPABILITY_ERROR`，而且是**先校验附件再连服务器**，越界时一封都不会发出去。
 - **不自动下载附件**：`mail.read` 只列附件名/类型/大小；要拿附件内容得另外的能力（本插件不提供）。
 - 读信用 `BODY.PEEK`，不会顺手把邮件标成已读；只有 `markSeen=true` 才写一个 `\Seen` 标志（此时用读写模式打开文件夹）。
 - 每次调用开一条连接、用完 `logout`；连接超时 15s；出错一律 `{error:{code:'CAPABILITY_ERROR'}}` 不 throw（网络类可重试，认证失败/越界不重试）。

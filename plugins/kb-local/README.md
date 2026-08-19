@@ -8,7 +8,7 @@
 
 ```
 npm install && npm run build && npm test
-npm run conformance      # 三个契约各跑一次本机一致性测试（cak add 也会跑同一套）
+npm run conformance      # 三个契约各跑一次本机一致性测试（cak add 也会跑同一套；带 CAK_DATA_DIR=<临时目录>，不碰 ~/.cak）
 ```
 
 ## 契约
@@ -34,8 +34,18 @@ npm run conformance      # 三个契约各跑一次本机一致性测试（cak a
 
 ## 存储
 
-`KB_DIR`（缺省 `~/.cak/kb`）下每个知识库一个文件：`<kb>.sqlite`。表 `files(path,size,mtime,chunks,indexedAt)` + `chunks_fts`（fts5: text, grams, path UNINDEXED, idx UNINDEXED）。
-删库 = 删文件。库名只许 `[A-Za-z0-9._-]`（≤64），避免路径穿越。
+每个知识库一个文件 `<库目录>/<kb>.sqlite`。**库目录按这个顺序定**（第一个命中的生效）：
+
+| 优先级 | 来源 | 目录 | 说明 |
+|---|---|---|---|
+| 1 | 环境变量 `KB_DIR` | 你指定的 | 显式覆盖 |
+| 2 | 环境变量 `CAK_DATA_DIR` | `$CAK_DATA_DIR/kb/` | 内核跑 conformance（`cak add`）时传的临时目录——测试数据不进用户真实的 `~/.cak` |
+| 3 | 有 `CAK_WORKSPACE`（内核启动插件时都有） | `<工作区>/.cak/kb/` | **按工作区隔离，跟项目走**：工作区删了索引一起没；别的工作区查不到你的库；库里存的绝对路径也不会变成别处的死链 |
+| 4 | 都没有（单机独立用） | `~/.cak/kb/` | 全机共享 |
+
+`kb.list` 的出参没有"库在哪"这个字段（契约定型了不加）；要看位置就看插件 `health` 的 detail（`kb dir …`），或按上表推。想跨工作区共用一个库：给插件进程设 `KB_DIR`。
+表 `files(path,size,mtime,chunks,indexedAt)` + `chunks_fts`（fts5: text, grams, path UNINDEXED, idx UNINDEXED）。
+删库 = 删文件。库名只许 `[A-Za-z0-9._-]`（≤64），避免路径穿越。工作区里 `.cak/` 是点目录，ingest 目录时会跳过，不会把索引自己索引进去。
 
 ## 给 agent 的用法建议
 
@@ -47,8 +57,8 @@ npm run conformance      # 三个契约各跑一次本机一致性测试（cak a
 ## 安全边界
 
 - `CAK_WORKSPACE` 存在时，`paths` 与 `pathPrefix` 只许在工作区内（相对路径按工作区解析，符号链接按真实目标判断），越界整个调用返回 `CAPABILITY_ERROR` 而不是静默跳过；不存在时（单机独立用）允许任意路径。
-- 只读你的文件，只写 `KB_DIR`；不出网、不起子进程。
-- 索引里存的是**原文块**——把敏感文件 ingest 进去，它就在 `~/.cak/kb/*.sqlite` 里明文躺着，请把它当作与源文件同等敏感的东西。
+- 只读你的文件，只写库目录；不出网、不起子进程。
+- 索引里存的是**原文块**——把敏感文件 ingest 进去，它就在 `<工作区>/.cak/kb/*.sqlite`（或 `~/.cak/kb/`）里明文躺着，请把它当作与源文件同等敏感的东西；工作区落库意味着**别把 `.cak/kb/` 提交进 git**（加进 `.gitignore`）。
 
 ## 诚实边界（哪些没真测 / 已知限制）
 

@@ -180,6 +180,11 @@ export const defaultSpawn: SpawnFn = (argv, cwd, timeoutMs) => new Promise((reso
   child.on('close', code => { if (done) return; done = true; clearTimeout(timer); resolve({ exitCode: code ?? -1, timedOut, durationMs: Date.now() - t0, text: chunks.join(''), ...(child.pid ? { pid: child.pid } : {}) }); });
 });
 
+/** 目标不存在时按最近存在的祖先目录取 realpath；realpath 失败退回原路径 */
+export function realpathNearest(p: string): string {
+  let probe = p; while (!fs.existsSync(probe)) { const up = path.dirname(probe); if (up === probe) break; probe = up; }
+  try { const r = fs.realpathSync(probe); return probe === p ? r : path.join(r, path.relative(probe, p)); } catch { return p; }
+}
 export class TestRunProvider implements CapabilityProvider {
   readonly id = 'test-run';
   private root: string; private spawnFn: SpawnFn;
@@ -191,6 +196,9 @@ export class TestRunProvider implements CapabilityProvider {
   private resolveCwd(p: string | undefined): string {
     const abs = path.resolve(this.root, p ?? '.'); const rel = path.relative(this.root, abs);
     if (rel.startsWith('..') || path.isAbsolute(rel)) throw new Error(`cwd ${p} escapes workspace`);
+    // 第二道：按真实路径（符号链接解析后）再判一次——工作区里 link → 工作区外目录也拒
+    const real = realpathNearest(abs); const relReal = path.relative(realpathNearest(this.root), real);
+    if (relReal.startsWith('..') || path.isAbsolute(relReal)) throw new Error(`cwd ${p} escapes workspace (symlink → ${real})`);
     return abs;
   }
   async execute(inv: AuthorizedInvocation, ctx: ProviderCallContext): Promise<ProviderExecuteResult> {
