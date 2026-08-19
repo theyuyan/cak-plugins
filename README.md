@@ -22,7 +22,7 @@ cak add http-fetch --registry <cak-registry 目录>
 # 或手工：
 cd plugins/http-fetch && npm install && npm run build && npm test && npm run conformance
 ```
-`@cak-dev/sdk` 尚未发 npm，`vendor/cak-dev-sdk-0.3.0.tgz` 是随仓库分发的构建产物（发布后改为 `^0.3`）。`npm run conformance` 需要 cak 仓库在 `~/agent-kernel`（或设 `CAK_HOME`）。
+`@cak-dev/sdk` 已发 npm（`^0.3.0`），插件直接依赖它。`npm run conformance` 需要 cak 仓库在 `~/agent-kernel`（或设 `CAK_HOME`）。
 
 ## 写新插件
 `npm create @cak-dev/plugin <name> --contract <name> --digest <sha256:…>`（digest 从 cak-registry `contracts/` 抄），实现 `listImplementations()` / `execute()`，过 conformance，再向 cak-registry 提 PR 加条目。**声明 `idempotent: true` 的契约，输出里不能有每次都变的字段**（durationMs / created…），conformance C5 会比对两次结果。

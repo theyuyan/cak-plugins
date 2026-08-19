@@ -8,7 +8,7 @@
     "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract http.fetch --args '{\"url\":\"https://example.com/\"}' --bad-args '{\"url\":\"http://127.0.0.1:1/\"}'"
   },
   "dependencies": {
-    "@cak-dev/sdk": "file:../../vendor/cak-dev-sdk-0.3.0.tgz"
+    "@cak-dev/sdk": "^0.3.0"
   },
   "devDependencies": {
     "typescript": "^5.6.0",
