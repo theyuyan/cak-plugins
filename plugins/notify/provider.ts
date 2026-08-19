@@ -2,7 +2,7 @@
 // 配置（webhook 地址不经模型）：构造参数 > NOTIFY_CONFIG（json 路径）> ~/.cak/notify.json：
 //   {"channels":{"ops":{"kind":"wecom","urlFile":"~/.cak/secrets/wecom-ops.url"},"team":{"kind":"slack","url":"https://hooks.slack.com/..."},"hook":{"kind":"generic","url":"https://..."}}}
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 export const CONTRACT: ContractRef = { name: 'notify.send', version: '1.0.0', schemaDigest: 'sha256:4a6fe94f547a259d0f3c99a0723e0d5744fade24649f92c6a2f4d9d6dc8577de' };
 export type Channel = { kind: 'slack' | 'wecom' | 'dingtalk' | 'generic'; url?: string; urlFile?: string };
 export interface NotifyConfig { channels: Record<string, Channel> }

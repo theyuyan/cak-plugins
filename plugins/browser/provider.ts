@@ -1,6 +1,6 @@
 // browser — CAK Capability Provider：真浏览器（Playwright / Chromium，headless）。browser.open / browser.act / browser.snapshot 三个契约，同一进程内一个页面会话。
 // 快照 = 标题 + 正文文本 + 可交互元素（ref → 元素句柄），act 用 ref 定位。安全：拒绝内网/回环地址（除非 BROWSER_ALLOW_PRIVATE=1）；外部副作用契约默认要审批。
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 import type { Browser, Page, ElementHandle } from 'playwright';
 
 export const OPEN: ContractRef = { name: 'browser.open', version: '1.0.0', schemaDigest: 'sha256:304349c2986b9791e84e00065240ccec8b38e83270855edcfc4ea70ad840061e' };

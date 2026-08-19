@@ -1,6 +1,6 @@
 // http-fetch — CAK Capability Provider：受控出网抓取（进程内 / 子进程同一份代码）
 // 治理不在这里：域名白名单 / 大小上限由句柄 caveat 决定；这里只做"拿到的参数一定已过验证"之后的事。
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef } from '@cak-dev/sdk';
 
 const CONTRACT: ContractRef = { name: 'http.fetch', version: '1.0.0', schemaDigest: 'sha256:6dc3df771b28e7f4ddac8842d1414008d22dded6864d533f0d4523ad5ce977e6' };
 

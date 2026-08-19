@@ -1,7 +1,7 @@
 // github — CAK Capability Provider：github.query@1（只读 REST，免审批）+ github.issue.create@1（建 issue / 评论，审批）。
 // 令牌来源（不经模型）：构造参数 > GITHUB_TOKEN 环境变量 > ~/.cak/secrets/github.token > `gh auth token`（本机 gh 已登录时）。
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os'; import { spawnSync } from 'node:child_process';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
 export const QUERY: ContractRef = { name: 'github.query', version: '1.0.0', schemaDigest: 'sha256:f613a999d674b97a66ec3c25f39edc61b225bf6a2bc3c9eedf763b3d54c702db' };
 export const ISSUE: ContractRef = { name: 'github.issue.create', version: '1.0.0', schemaDigest: 'sha256:496bfe1e0c51782675cda9c0a78eb79d2602b46632d7dce4abf536708038b7a5' };

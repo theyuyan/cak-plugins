@@ -1,7 +1,7 @@
 // doc-read — CAK Capability Provider：读文档为文本（doc.read@1）：PDF / Word(.docx) / Excel(.xlsx) / CSV / 纯文本。
 // 路径安全：宿主传 CAK_WORKSPACE 时只在其内解析（越界 → CAPABILITY_ERROR）；没传（单机独立用）才允许任意路径。句柄 caveat 是第二道墙。
 import fs from 'node:fs'; import path from 'node:path';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
 const CONTRACT: ContractRef = { name: 'doc.read', version: '1.0.0', schemaDigest: 'sha256:d4bdd0140cd001c4016bf0e83b877f3787de255f985beff1f2de23ba50334e43' };
 type Fmt = 'pdf' | 'docx' | 'xlsx' | 'csv' | 'text';

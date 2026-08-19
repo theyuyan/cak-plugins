@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { servePlugin } from "@cak/sdk";
+import { servePlugin } from "@cak-dev/sdk";
 import { BrowserProvider } from "./provider.js";
 const p = new BrowserProvider();
 process.on("SIGTERM", () => { p.close().finally(() => process.exit(0)); });

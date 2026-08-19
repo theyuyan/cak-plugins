@@ -1,6 +1,6 @@
 // pkg-info — CAK Capability Provider：pkg.info@1，查 npm / PyPI 官方源的最新版本、发布日期、描述、仓库、README。keyless。
 // 目的：agent 写代码前先确认当前版本与用法（Context7 类需求的开放实现），别凭训练记忆写过时 API。
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 export const CONTRACT: ContractRef = { name: 'pkg.info', version: '1.0.0', schemaDigest: 'sha256:ace92ba8a60ea7dc2774b9442afc51fdf48bb46cf5de2f71b9a12a735ceaa86f' };
 
 export class PkgInfoProvider implements CapabilityProvider {

@@ -2,7 +2,7 @@
 // 存放：构造参数 > MEMORY_SQLITE_FILE > ~/.cak/memory.sqlite。写入 idempotent：同 namespace + 同 content 只存一份（返回 created=false）。
 import { createRequire } from 'node:module';
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os'; import { createHash } from 'node:crypto';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
 export const SEARCH: ContractRef = { name: 'memory.search', version: '1.0.0', schemaDigest: 'sha256:e013a26cdc1e4edabc823f574c787f46a8deab471b7a0940f286be04f70a5ebe' };
 export const WRITE: ContractRef = { name: 'memory.write', version: '1.0.0', schemaDigest: 'sha256:fec450779df5805345e471bc90640d9ac2177fd5d815ea2bc17e948532c70d70' };

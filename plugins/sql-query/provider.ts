@@ -2,7 +2,7 @@
 // 只读三重保险：SQLite readOnly 打开 / Postgres READ ONLY 事务 / 语句白名单（单条 SELECT|WITH|EXPLAIN|SHOW|PRAGMA table_info…）。
 import { createRequire } from 'node:module';
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
 const CONTRACT: ContractRef = { name: 'sql.query', version: '1.0.0', schemaDigest: 'sha256:d4fe13949a883b2e1a2e4d8c9471037cdc320be4e51bf73591bee4c9fc685f44' };
 export type Conn = { driver: 'sqlite'; file: string } | { driver: 'postgres'; url: string } | { driver: 'postgres'; urlEnv: string };

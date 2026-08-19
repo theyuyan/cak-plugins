@@ -3,7 +3,7 @@
 //   {"engine":"brave","keyFile":"~/.cak/secrets/brave.key"} | {"engine":"tavily","keyFile":"~/.cak/secrets/tavily.key"} | {"engine":"searxng","url":"http://127.0.0.1:8080"}
 // 诚实：三种适配器按各家官方响应格式写，用本地假服务器测过格式；作者没有 key，未联网真测。
 import fs from 'node:fs'; import path from 'node:path'; import os from 'node:os';
-import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak/sdk';
+import type { CapabilityProvider, CapabilityImplementation, AuthorizedInvocation, ProviderCallContext, ProviderExecuteResult, ContractRef, Json } from '@cak-dev/sdk';
 
 const CONTRACT: ContractRef = { name: 'web.search', version: '1.0.0', schemaDigest: 'sha256:57d866fa22c4afed4762a7eeceb4e1fdd324cf57a66a56315a521ddf9fde6d82' };
 export type Config = { engine: 'brave'; keyFile: string; baseUrl?: string } | { engine: 'tavily'; keyFile: string; baseUrl?: string } | { engine: 'searxng'; url: string };

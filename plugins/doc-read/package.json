@@ -9,7 +9,7 @@
     "test": "node --test test.mjs"
   },
   "dependencies": {
-    "@cak/sdk": "file:../../vendor/cak-sdk-0.3.0.tgz",
+    "@cak-dev/sdk": "file:../../vendor/cak-dev-sdk-0.3.0.tgz",
     "pdf-parse": "^2.4.5",
     "mammoth": "^1.12.1",
     "exceljs": "^4.4.0",
