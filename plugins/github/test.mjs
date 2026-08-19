@@ -10,7 +10,7 @@ const seen = []; const srv = http.createServer((req, res) => { let b = ''; req.o
 await new Promise(r => srv.listen(0, '127.0.0.1', r)); const base = `http://127.0.0.1:${srv.address().port}`;
 test('query (mock): auth header, query params, rate, 404 → error', async () => {
   const p = new GithubProvider({ token: 'TOK', baseUrl: base });
-  const r = await call(p, QUERY, { path: '/repos/o/r/issues', query: { state: 'open', per_page: 5 } }); assert.deepEqual(r.output.data, [{ number: 1, title: 'bug' }]); assert.equal(r.output.rateRemaining, 4999); assert.equal(seen.at(-1).auth, 'Bearer TOK'); assert.match(seen.at(-1).url, /state=open&per_page=5/);
+  const r = await call(p, QUERY, { path: '/repos/o/r/issues', query: { state: 'open', per_page: 5 } }); assert.deepEqual(r.output.data, [{ number: 1, title: 'bug' }]); assert.equal(seen.at(-1).auth, 'Bearer TOK'); assert.match(seen.at(-1).url, /state=open&per_page=5/);
   const bad = await call(p, QUERY, { path: '/repos/o/missing' }); assert.match(bad.error.message, /404: Not Found/);
 });
 test('issue create + comment (mock)', async () => {

@@ -29,8 +29,8 @@ export class GithubProvider implements CapabilityProvider {
         const r = await this.f(u, { headers: this.headers() }); const text = await r.text(); const max = Number(a['maxBytes'] ?? 200000);
         let data: Json; try { data = JSON.parse(text.length > max ? text.slice(0, max) : text); } catch { data = text.slice(0, max); }
         if (!r.ok) return { error: { code: 'CAPABILITY_ERROR', message: `github ${r.status}: ${typeof data === 'object' && data && 'message' in (data as any) ? (data as any).message : String(text).slice(0, 200)}`, retryable: r.status === 429 || r.status >= 500 } };
-        const rem = Number(r.headers.get('x-ratelimit-remaining') ?? NaN);
-        return { output: { status: r.status, data: text.length > max ? (typeof data === 'string' ? data : data) : data, truncated: text.length > max, ...(Number.isFinite(rem) ? { rateRemaining: rem } : {}) } as unknown as Json };
+        // 不再回显 x-ratelimit-remaining：它每次调用都变，会让 github.query 这个幂等契约的两次输出不一致（conformance C5 偶发失败）；限流信息在 429/403 的错误消息里给
+        return { output: { status: r.status, data, truncated: text.length > max } as unknown as Json };
       }
       if (inv.contract.name === 'github.issue.create') {
         if (!this.token) return { error: { code: 'CAPABILITY_ERROR', message: 'no GitHub token（GITHUB_TOKEN / ~/.cak/secrets/github.token / gh auth login）', retryable: false } };
