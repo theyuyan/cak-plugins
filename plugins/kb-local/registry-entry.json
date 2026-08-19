@@ -1,0 +1,32 @@
+{
+  "id": "kb-local",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "本地知识库：把目录/文件切块建全文索引（SQLite FTS5 + BM25，零依赖离线、不调 embedding），再用关键词/短语/中文检索相关段落。先 kb.ingest 项目 docs 再 kb.query。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/kb-local"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    { "name": "kb.ingest", "version": "1.0.0", "sampleArgs": { "paths": ["README.md"] } },
+    { "name": "kb.query", "version": "1.0.0", "sampleArgs": { "q": "hello", "limit": 3 } },
+    { "name": "kb.list", "version": "1.0.0", "sampleArgs": {} }
+  ],
+  "keywords": [
+    "知识库", "本地知识库", "全文检索", "检索", "搜索", "文档", "RAG", "BM25", "FTS5", "索引",
+    "knowledge base", "search", "full-text", "local rag", "docs", "index", "sqlite"
+  ],
+  "setup": "无需配置。可选环境变量 KB_DIR 改存放目录（默认 ~/.cak/kb）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/kb-local",
+  "tier": "T1"
+}

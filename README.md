@@ -14,6 +14,11 @@ CAK（Composable Agent Kernel）的社区插件 monorepo。每个插件 = 一个
 | `plugins/notify` | `notify.send@1` | 通知：Slack / 企微 / 钉钉 / 通用 webhook 别名制，地址不经模型 |
 | `plugins/front-plain` | （前端，无契约） | 零依赖极简日志流前端：只连 daemon 控制面；`cak front front-plain` 切换 |
 | `plugins/doc-read` | `doc.read@1` | 读文档为文本：PDF / Word / Excel / CSV / 文本；表格给 markdown + 结构化；只在 `CAK_WORKSPACE` 内解析路径 |
+| `plugins/email` | `mail.search@1` `mail.read@1` `mail.send@1` | 邮件（IMAP/SMTP，账号别名制）：搜/读（免审）、发/回复（审批，附件只允许工作区内）；**未连真实邮箱服务器**（假 IMAP + 本机 SMTP 测） |
+| `plugins/calendar` | `calendar.list@1` `calendar.events@1` `calendar.create@1` | 日历（CalDAV，自写最小客户端 + ical.js）：列日历、按窗口查事件（重复已展开）、建日程（审批）；只支持 Basic 认证；**未连真实 CalDAV 服务器** |
+| `plugins/kb-local` | `kb.ingest@1` `kb.query@1` `kb.list@1` | 本地知识库：SQLite FTS5（trigram）+ BM25，零依赖离线，中英文都能检索；不是向量检索、不认同义词 |
+| `plugins/test-run` | `test.run@1` | 跑测试拿结构化结果：自动探测 vitest / jest / mocha / node --test / pytest / go / cargo / npm test；超时杀整个进程组；jest/mocha/pytest/go/cargo 解析器只用样本文本测过 |
+| `plugins/schedule` | `schedule.create@1` `schedule.list@1` `schedule.cancel@1` | 定时叫醒：到点把一句话投递给同一内核里的 agent 会话（一次性 / 每 N / cron）；只是叫醒不是后台执行，内核不在不触发 |
 
 ## 用
 ```

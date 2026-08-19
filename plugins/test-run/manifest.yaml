@@ -1,0 +1,11 @@
+id: plugins/test-run
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: test.run, version: 1.0.0, schemaDigest: "sha256:c727483720e6d023f9f3483da8bbdc9389f0973a78e5163671d28d70b22ec8ac" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

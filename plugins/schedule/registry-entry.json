@@ -1,0 +1,60 @@
+{
+  "id": "schedule",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "给 agent 定闹钟/定时任务：到点把一句话投递给某个 agent 会话把它叫醒接着干（一次性 / 每 N 分钟小时天 / cron）；只是叫醒不是后台执行，内核进程不在时不触发。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/schedule"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "schedule.list",
+      "version": "1.0.0",
+      "sampleArgs": {}
+    },
+    {
+      "name": "schedule.create",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "text": "conformance 测试",
+        "inMinutes": 600
+      }
+    },
+    {
+      "name": "schedule.cancel",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "id": "nonexistent"
+      }
+    }
+  ],
+  "keywords": [
+    "定时",
+    "定时任务",
+    "闹钟",
+    "提醒",
+    "稍后",
+    "每天",
+    "周期",
+    "cron",
+    "schedule",
+    "timer",
+    "reminder",
+    "alarm",
+    "wake"
+  ],
+  "setup": "无需配置；任务存 ~/.cak/schedule/jobs.json（SCHEDULE_DIR 可改）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/schedule",
+  "tier": "T1"
+}

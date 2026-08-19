@@ -1,0 +1,15 @@
+id: plugins/email
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: mail.search, version: 1.0.0, schemaDigest: "sha256:56ba5bac01c5ab644de7e2ed97c8eb435f0d8e1fb9628d6791052bd62259ded8" }
+      priority: 50
+    - contract: { name: mail.read, version: 1.0.0, schemaDigest: "sha256:872f19c46046ea52b8934cc04a251de5c783f798a66b792018c3cf49a83d5536" }
+      priority: 50
+    - contract: { name: mail.send, version: 1.0.0, schemaDigest: "sha256:14c1288b8462a3b1f8127c7d248c31271e327eebd17bb18a1ce1ffdf504fe8be" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

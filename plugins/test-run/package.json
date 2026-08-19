@@ -1,0 +1,19 @@
+{
+  "name": "test-run",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract test.run --args '{\"framework\":\"custom\",\"argv\":[\"node\",\"-e\",\"console.log(1)\"],\"timeoutMs\":10000}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：跑测试并返回结构化结果（test.run@1）"
+}

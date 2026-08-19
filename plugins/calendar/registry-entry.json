@@ -1,0 +1,68 @@
+{
+  "id": "calendar",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "看日历、查日程、建日程（CalDAV：iCloud / Nextcloud / Fastmail / Radicale 等）：列日历、按时间窗口查事件（重复事件已展开）、新建一条日程（要审批）。账号走本地配置别名，密码不进模型。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/calendar"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "calendar.list",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "account": "default"
+      }
+    },
+    {
+      "name": "calendar.events",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "account": "default",
+        "from": "2026-01-01",
+        "to": "2026-01-07"
+      }
+    },
+    {
+      "name": "calendar.create",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "account": "default",
+        "calendar": "Work",
+        "title": "test",
+        "start": "2026-01-01T10:00:00"
+      }
+    }
+  ],
+  "keywords": [
+    "日历",
+    "日程",
+    "会议",
+    "提醒",
+    "行程",
+    "安排",
+    "calendar",
+    "caldav",
+    "event",
+    "schedule",
+    "meeting",
+    "icloud",
+    "nextcloud",
+    "fastmail",
+    "radicale"
+  ],
+  "setup": "建 ~/.cak/calendar.json：{\"accounts\":{\"default\":{\"serverUrl\":\"https://caldav.example.com/\",\"username\":\"…\",\"passFile\":\"~/.cak/secrets/caldav-default.pass\"}}}，密码写进 passFile（iCloud/Fastmail 用 App 专用密码；只支持 Basic 认证，Google 官方端点需 OAuth 接不了）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/calendar",
+  "tier": "T1"
+}

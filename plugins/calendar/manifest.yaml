@@ -1,0 +1,15 @@
+id: plugins/calendar
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: calendar.list, version: 1.0.0, schemaDigest: "sha256:1ed5f4000da4f5a6755a0f58cc27a85d232b29aaaa42d9600bf68fe020dcea64" }
+      priority: 50
+    - contract: { name: calendar.events, version: 1.0.0, schemaDigest: "sha256:6e5b75112829ef7accddec161c6128002ebc18faf5bf2f7df5091fc16d228597" }
+      priority: 50
+    - contract: { name: calendar.create, version: 1.0.0, schemaDigest: "sha256:58df19fa18e506e8e29e9d55182e91f16b180fd0aa8146ff8eaa03a492065507" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

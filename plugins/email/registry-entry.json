@@ -1,0 +1,32 @@
+{
+  "id": "email",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "查邮件、读邮件、发邮件（IMAP/SMTP，账号别名制，凭据不经模型）：按关键词/日期/未读搜索邮件列表，读一封的正文纯文本与附件清单（不下载），发纯文本邮件或回复某封（可带工作区内附件；发信要审批）。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/email"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    { "name": "mail.search", "version": "1.0.0", "sampleArgs": { "account": "default", "limit": 5 } },
+    { "name": "mail.read", "version": "1.0.0", "sampleArgs": { "account": "default", "uid": 1 } },
+    { "name": "mail.send", "version": "1.0.0", "sampleArgs": { "account": "default", "to": ["someone@example.com"], "subject": "test", "text": "hi" } }
+  ],
+  "keywords": [
+    "邮件", "邮箱", "收件箱", "查邮件", "读邮件", "发邮件", "回复邮件", "未读邮件", "附件",
+    "email", "mail", "imap", "smtp", "inbox", "send email", "reply", "gmail", "outlook", "qq邮箱", "163邮箱"
+  ],
+  "setup": "建 ~/.cak/mail.json（accounts.<别名>.imap/smtp 的 host/port/secure/user/passFile + from），密码写进 ~/.cak/secrets/ 文件；Gmail 用应用专用密码，QQ/163 用授权码。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/email",
+  "tier": "T1"
+}

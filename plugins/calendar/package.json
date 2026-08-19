@@ -1,0 +1,20 @@
+{
+  "name": "calendar",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract calendar.list --args '{\"account\":\"default\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract calendar.events --args '{\"account\":\"default\",\"from\":\"2026-01-01\",\"to\":\"2026-01-07\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract calendar.create --args '{\"account\":\"default\",\"calendar\":\"Work\",\"title\":\"test\",\"start\":\"2026-01-01T10:00:00\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0",
+    "ical.js": "^2.2.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：CalDAV 日历（calendar.list / calendar.events 只读 + calendar.create 建日程）"
+}

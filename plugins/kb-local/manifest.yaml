@@ -1,0 +1,15 @@
+id: plugins/kb-local
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: kb.ingest, version: 1.0.0, schemaDigest: "sha256:a441be66237e615034ff1ecf208fc99a8616fea22c239daa68a8aa9ea9e9654d" }
+      priority: 50
+    - contract: { name: kb.query, version: 1.0.0, schemaDigest: "sha256:e73aaa9bf2912d3db971aa20cb99433a96bd6db53cc086c1183f9a4cf783a37e" }
+      priority: 50
+    - contract: { name: kb.list, version: 1.0.0, schemaDigest: "sha256:3011cbc71b3a7b55af53f72bc978d541f2952ef10dd8e502d0c784d8434ecac3" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

@@ -1,0 +1,15 @@
+id: plugins/schedule
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: schedule.create, version: 1.0.0, schemaDigest: "sha256:8ec32c8cd04681dab8af4edac1eba7d5ac836079abd8fd649da937e29cdb2b3e" }
+      priority: 50
+    - contract: { name: schedule.list, version: 1.0.0, schemaDigest: "sha256:703d9ccc13a2684cc50ea432281804c05ec81446b215453cf0565e1e3b4bbc53" }
+      priority: 50
+    - contract: { name: schedule.cancel, version: 1.0.0, schemaDigest: "sha256:e1e313ae28aff134e2a6bd3c73914104fe4b17d395ce7245a643cf8597d62dda" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

@@ -1,0 +1,50 @@
+{
+  "id": "test-run",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "跑测试并返回结构化结果：自动探测 vitest / jest / mocha / node --test / pytest / go / cargo / npm test（或指定 custom 命令），给出通过/失败/跳过计数、失败清单（名字+消息+文件）和输出尾部。改完代码一条调用拿到失败在哪，不用自己拼命令、啃长输出。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/test-run"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "test.run",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "framework": "custom",
+        "argv": ["node", "-e", "console.log('ok')"],
+        "timeoutMs": 10000
+      }
+    }
+  ],
+  "keywords": [
+    "测试",
+    "跑测试",
+    "单元测试",
+    "test",
+    "run tests",
+    "vitest",
+    "jest",
+    "mocha",
+    "pytest",
+    "go test",
+    "cargo test",
+    "npm test",
+    "失败列表",
+    "TDD"
+  ],
+  "setup": "无需配置；被测项目自身的测试框架要能在本机运行（如 npx vitest / python3 -m pytest / go / cargo 在 PATH 里）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/test-run",
+  "tier": "T1"
+}

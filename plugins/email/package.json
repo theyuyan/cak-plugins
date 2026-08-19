@@ -1,0 +1,25 @@
+{
+  "name": "email",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "MAIL_CONFIG=/nonexistent.json npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract mail.search --args '{\"account\":\"default\",\"limit\":5}' && MAIL_CONFIG=/nonexistent.json npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract mail.read --args '{\"account\":\"default\",\"uid\":1}' && MAIL_CONFIG=/nonexistent.json npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract mail.send --args '{\"account\":\"default\",\"to\":[\"someone@example.com\"],\"subject\":\"test\",\"text\":\"hi\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0",
+    "imapflow": "^1.0.0",
+    "mailparser": "^3.7.0",
+    "nodemailer": "^9.0.5"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/mailparser": "^3.4.0",
+    "@types/nodemailer": "^8.0.0",
+    "smtp-server": "^3.13.0"
+  },
+  "description": "CAK 插件：邮件（mail.search@1 / mail.read@1 / mail.send@1）— IMAP 查读 + SMTP 发，账号别名制"
+}
