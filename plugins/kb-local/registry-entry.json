@@ -18,13 +18,48 @@
     ]
   },
   "contracts": [
-    { "name": "kb.ingest", "version": "1.0.0", "sampleArgs": { "paths": ["README.md"] } },
-    { "name": "kb.query", "version": "1.0.0", "sampleArgs": { "q": "hello", "limit": 3 } },
-    { "name": "kb.list", "version": "1.0.0", "sampleArgs": {} }
+    {
+      "name": "kb.ingest",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "paths": [
+          "README.md"
+        ],
+        "kb": "_conformance"
+      }
+    },
+    {
+      "name": "kb.query",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "q": "hello",
+        "limit": 3
+      }
+    },
+    {
+      "name": "kb.list",
+      "version": "1.0.0",
+      "sampleArgs": {}
+    }
   ],
   "keywords": [
-    "知识库", "本地知识库", "全文检索", "检索", "搜索", "文档", "RAG", "BM25", "FTS5", "索引",
-    "knowledge base", "search", "full-text", "local rag", "docs", "index", "sqlite"
+    "知识库",
+    "本地知识库",
+    "全文检索",
+    "检索",
+    "搜索",
+    "文档",
+    "RAG",
+    "BM25",
+    "FTS5",
+    "索引",
+    "knowledge base",
+    "search",
+    "full-text",
+    "local rag",
+    "docs",
+    "index",
+    "sqlite"
   ],
   "setup": "无需配置。可选环境变量 KB_DIR 改存放目录（默认 ~/.cak/kb）。",
   "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/kb-local",
