@@ -19,6 +19,12 @@ CAK（Composable Agent Kernel）的社区插件 monorepo。每个插件 = 一个
 | `plugins/kb-local` | `kb.ingest@1` `kb.query@1` `kb.list@1` | 本地知识库：SQLite FTS5（trigram）+ BM25，零依赖离线，中英文都能检索；不是向量检索、不认同义词 |
 | `plugins/test-run` | `test.run@1` | 跑测试拿结构化结果：自动探测 vitest / jest / mocha / node --test / pytest / go / cargo / npm test；超时杀整个进程组；jest/mocha/pytest/go/cargo 解析器只用样本文本测过 |
 | `plugins/schedule` | `schedule.create@1` `schedule.list@1` `schedule.cancel@1` | 定时叫醒：到点把一句话投递给同一内核里的 agent 会话（一次性 / 每 N / cron）；只是叫醒不是后台执行，内核不在不触发 |
+| `plugins/ssh-exec` | `ssh.exec@1` `ssh.fetch@1` `ssh.hosts@1` | 远程主机执行命令 / 拉文件 / 列主机：走本机 ssh、只用密钥（BatchMode 永不要密码）、主机别名制、argv 安全拼接、超时杀进程组；**未连真实主机** |
+| `plugins/docker` | `docker.ps@1` `docker.logs@1` `docker.exec@1` `docker.control@1` | 看容器 / 读日志 / 容器内执行（审批）/ 起停（审批）；不删容器镜像；可选容器白名单；**只在假 docker 上测过（本机 daemon 没起）** |
+| `plugins/doc-write` | `doc.write.docx@1` `doc.write.xlsx@1` `doc.write.html@1` | 产出办公文件：Markdown 子集→Word、二维表→Excel、GFM→自包含 HTML（白名单清洗）；只写工作区内；docx/xlsx 只用 LibreOffice 与解析器读回验过，Word/Excel 本体没人眼看过 |
+| `plugins/webhook` | `webhook.create@1` `webhook.list@1` `webhook.delete@1` | 本机 HTTP webhook：外部系统 POST 一下把 agent 叫醒（模板渲染请求体→投递会话）；默认只监听 127.0.0.1、token 在 URL、限流；未在公网跑 |
+| `plugins/open-sources` | `feed.read@1` `hn.top@1` `wiki.search@1` `arxiv.search@1` | 免 key 公开信息源：RSS/Atom/JSON Feed、Hacker News、维基百科、arXiv；已真联网冒烟一次 |
+| `plugins/desktop` | `desktop.notify@1` `desktop.open@1` `desktop.clipboard.read@1` `desktop.clipboard.write@1` | 桌面：系统通知 / 默认程序打开工作区文件或网址 / 读写剪贴板；macOS 真跑过，Linux/Windows 只用假 spawn 测过 |
 
 ## 用
 ```

@@ -1,0 +1,17 @@
+id: plugins/docker
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: docker.ps, version: 1.0.0, schemaDigest: "sha256:89f22703b56523e89fedc767de520c3f2ed8ae7195735f121504aa0eb25671e8" }
+      priority: 50
+    - contract: { name: docker.logs, version: 1.0.0, schemaDigest: "sha256:07fd80539be2c7d11adc591025970e618ac265ccf7dee9b678a12c162097041a" }
+      priority: 50
+    - contract: { name: docker.exec, version: 1.0.0, schemaDigest: "sha256:a520bedc1b033c7ba761ab07d4bc5ba653f0ab53ea08e467ff928b43f98bd821" }
+      priority: 50
+    - contract: { name: docker.control, version: 1.0.0, schemaDigest: "sha256:8bf6217e90b124c826603d8f0acda8c964255194e9f96082b61c38c27c1c977d" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

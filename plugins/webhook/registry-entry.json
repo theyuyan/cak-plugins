@@ -1,0 +1,64 @@
+{
+  "id": "webhook",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "本机 HTTP webhook：让 CI / Git 平台 / 监控 / Zapier、n8n / 脚本 / 手机快捷指令用一个 POST 把 agent 叫醒——按 prompt 模板（{{body}} / {{json.a.b}} / {{header.x}} / {{query.k}}）渲染请求后作为一句用户输入投递给 agent 会话；默认只监听 127.0.0.1，token 在 URL 里只给一次；只是叫醒不是后台执行，内核不在时回 503。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/webhook"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "webhook.list",
+      "version": "1.0.0",
+      "sampleArgs": {}
+    },
+    {
+      "name": "webhook.create",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "name": "conformance-test",
+        "prompt": "收到：{{body}}"
+      }
+    },
+    {
+      "name": "webhook.delete",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "name": "nonexistent"
+      }
+    }
+  ],
+  "keywords": [
+    "webhook",
+    "回调",
+    "HTTP",
+    "POST",
+    "叫醒",
+    "触发",
+    "事件",
+    "CI",
+    "告警",
+    "监控",
+    "快捷指令",
+    "n8n",
+    "zapier",
+    "trigger",
+    "callback",
+    "event",
+    "wake"
+  ],
+  "setup": "无需配置；数据存 ~/.cak/webhook/hooks.json（WEBHOOK_DIR 可改），端口首次随机 40000-49999 或 WEBHOOK_PORT；默认只监听 127.0.0.1（WEBHOOK_BIND=0.0.0.0 才对外，要放反代/防火墙后）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/webhook",
+  "tier": "T1"
+}

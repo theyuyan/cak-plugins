@@ -1,0 +1,19 @@
+{
+  "name": "desktop",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "export DESKTOP_DRY_RUN=1; npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract desktop.open --args '{\"target\":\"https://example.com\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract desktop.clipboard.read --args '{\"maxChars\":100}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract desktop.clipboard.write --args '{\"text\":\"cak conformance\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract desktop.notify --args '{\"title\":\"cak\",\"message\":\"conformance\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：桌面交互（desktop.notify / desktop.open / desktop.clipboard.read / desktop.clipboard.write）— 系统通知、默认程序打开、剪贴板读写，跨平台零依赖"
+}

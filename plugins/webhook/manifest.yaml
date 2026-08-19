@@ -1,0 +1,15 @@
+id: plugins/webhook
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: webhook.create, version: 1.0.0, schemaDigest: "sha256:799cfe6b10431734da263de786a33021a4becc1d46dc5d7f9b7a68c4eb15550d" }
+      priority: 50
+    - contract: { name: webhook.list, version: 1.0.0, schemaDigest: "sha256:f5c13610c9abdeb4ae62c7be683999b7f4cced6f8f78d10ec5253ff7cfb4b147" }
+      priority: 50
+    - contract: { name: webhook.delete, version: 1.0.0, schemaDigest: "sha256:45c94af28a969dfe5e413494cf810f39909a48c1079eb6bc7b2f329653105213" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

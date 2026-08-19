@@ -1,0 +1,19 @@
+{
+  "name": "ssh-exec",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "for c in ssh.hosts ssh.exec ssh.fetch; do case $c in ssh.hosts) A='{}';; ssh.exec) A='{\"host\":\"example\",\"argv\":[\"uptime\"]}';; ssh.fetch) A='{\"host\":\"example\",\"remotePath\":\"/etc/hostname\",\"localPath\":\"hostname.txt\"}';; esac; npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract $c --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args \"$A\" || exit 1; done",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：经本机 ssh（只走密钥、BatchMode）在远程主机跑命令 / 拉文件 / 列主机别名（ssh.exec@1 / ssh.fetch@1 / ssh.hosts@1）"
+}

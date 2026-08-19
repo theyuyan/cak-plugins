@@ -1,0 +1,44 @@
+{
+  "id": "doc-write",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "产出办公文件（只写工作区内，已存在默认不覆盖）：Markdown 子集→Word .docx（标题/列表/表格/代码/引用/分页/图片，微软雅黑）、二维表→Excel .xlsx（表头加粗、冻结首行、自动列宽）、GFM Markdown→自包含单文件 HTML（三套主题、图片内联、白名单清洗）。写周报/导出表格/生成可分享的报告页用它。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/doc-write"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "doc.write.docx",
+      "version": "1.0.0",
+      "sampleArgs": { "outPath": "_conformance/sample.docx", "markdown": "# 标题\n\n正文 **粗体**\n\n| a | b |\n|---|---|\n| 1 | 2 |", "overwrite": true }
+    },
+    {
+      "name": "doc.write.xlsx",
+      "version": "1.0.0",
+      "sampleArgs": { "outPath": "_conformance/sample.xlsx", "sheets": [ { "name": "S1", "columns": [ "a", "b" ], "rows": [ [ 1, "x" ] ] } ], "overwrite": true }
+    },
+    {
+      "name": "doc.write.html",
+      "version": "1.0.0",
+      "sampleArgs": { "outPath": "_conformance/sample.html", "markdown": "# 标题\n\n正文", "overwrite": true }
+    }
+  ],
+  "keywords": [
+    "写文档", "生成文档", "Word", "docx", "周报", "报告", "导出", "Excel", "xlsx", "表格", "HTML", "网页报告", "Markdown 转 Word", "Markdown 转 HTML", "办公文件",
+    "write document", "generate docx", "export xlsx", "spreadsheet", "markdown to word", "markdown to html", "report", "office"
+  ],
+  "setup": "无需配置。宿主传 CAK_WORKSPACE 时只写该目录内；没传以进程 cwd 为根。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/doc-write",
+  "tier": "T1"
+}

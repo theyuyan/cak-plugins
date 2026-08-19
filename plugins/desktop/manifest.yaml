@@ -1,0 +1,17 @@
+id: plugins/desktop
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: desktop.notify, version: 1.0.0, schemaDigest: "sha256:2255233f772530196f232687b5b1b72807e1381e8e2f760a0147097792da9435" }
+      priority: 50
+    - contract: { name: desktop.open, version: 1.0.0, schemaDigest: "sha256:616b6a3f490ba2160f8d4c58093cea8c396175ca58b931fd1644fe2211d68d9c" }
+      priority: 50
+    - contract: { name: desktop.clipboard.read, version: 1.0.0, schemaDigest: "sha256:ffa6769072ac534fecbd6e14930e5f1b60dd7b541df760c74525733addd716cc" }
+      priority: 50
+    - contract: { name: desktop.clipboard.write, version: 1.0.0, schemaDigest: "sha256:6beb6425588f5a884f48f4c7bde42026da1c48b36551dc68bb5035ccf061fd1a" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

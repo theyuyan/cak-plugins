@@ -1,0 +1,15 @@
+id: plugins/doc-write
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: doc.write.docx, version: 1.0.0, schemaDigest: "sha256:aa5c1221bebeaadd132d1885bc940fb8c2467d29e4199ee1fe26371ddf33f9c8" }
+      priority: 50
+    - contract: { name: doc.write.xlsx, version: 1.0.0, schemaDigest: "sha256:7606feb8aadde615e2765cc64f9dc30307a77c2a918b5139f308b785a48ca6f7" }
+      priority: 50
+    - contract: { name: doc.write.html, version: 1.0.0, schemaDigest: "sha256:5e50ef9a13e5d34b7996209aa056126ddf6e166e19e7ebe3b88326b3516159fc" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

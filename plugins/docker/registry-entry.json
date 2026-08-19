@@ -1,0 +1,45 @@
+{
+  "id": "docker",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "看容器、读日志、在容器里跑命令、起停容器：docker.ps 列容器（状态/镜像/端口，可按 status=exited 等过滤）、docker.logs 读日志尾部（tail/since/grep）、docker.exec 在容器内执行命令（argv 不经 shell，需审批）、docker.control 启动/停止/重启（需审批）。走本机 docker CLI，不删容器/镜像。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/docker"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    { "name": "docker.ps", "version": "1.0.0", "sampleArgs": { "limit": 5 } },
+    { "name": "docker.logs", "version": "1.0.0", "sampleArgs": { "container": "nonexistent", "tail": 10 } },
+    { "name": "docker.exec", "version": "1.0.0", "sampleArgs": { "container": "nonexistent", "argv": ["true"] } },
+    { "name": "docker.control", "version": "1.0.0", "sampleArgs": { "container": "nonexistent", "action": "start" } }
+  ],
+  "keywords": [
+    "docker",
+    "容器",
+    "容器日志",
+    "docker ps",
+    "docker logs",
+    "docker exec",
+    "重启容器",
+    "起停容器",
+    "container",
+    "logs",
+    "exec",
+    "restart",
+    "运维",
+    "compose"
+  ],
+  "setup": "本机要装 docker CLI 且 daemon 可连（DOCKER_HOST/DOCKER_CONTEXT 由环境决定）；可选 ~/.cak/docker.json 写 {\"allowContainers\":[\"web-*\"],\"denyExec\":true} 限制可操作的容器/禁用 exec。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/docker",
+  "tier": "T1"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "ssh-exec",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "经本机 ssh 在远程主机上执行命令、拉取文件、列出可连主机（ssh.exec / ssh.fetch / ssh.hosts）。主机用 ~/.cak/ssh.json 里的别名，只走密钥（BatchMode 永不弹密码），远程命令由 argv 数组安全拼接，超时杀进程组。给运维 agent 查状态、看日志、重启服务、取配置用。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/ssh-exec"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "ssh.hosts",
+      "version": "1.0.0",
+      "sampleArgs": {}
+    },
+    {
+      "name": "ssh.exec",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "host": "example",
+        "argv": ["uptime"]
+      }
+    },
+    {
+      "name": "ssh.fetch",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "host": "example",
+        "remotePath": "/etc/hostname",
+        "localPath": "hostname.txt"
+      }
+    }
+  ],
+  "keywords": [
+    "ssh",
+    "远程执行",
+    "远程命令",
+    "服务器",
+    "运维",
+    "拉文件",
+    "scp",
+    "取日志",
+    "remote exec",
+    "remote shell",
+    "fetch file",
+    "ops",
+    "sysadmin",
+    "linux"
+  ],
+  "setup": "本机要有 OpenSSH 客户端且已 ssh-copy-id 到目标机；写 ~/.cak/ssh.json：{\"allowRawHosts\":false,\"hosts\":{\"web1\":{\"target\":\"deploy@10.0.0.5\",\"identityFile\":\"~/.ssh/id_ed25519\",\"allowSudo\":false}}}（SSH_CONFIG 可改路径）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/ssh-exec",
+  "tier": "T1"
+}

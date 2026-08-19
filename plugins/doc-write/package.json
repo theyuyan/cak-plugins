@@ -1,0 +1,23 @@
+{
+  "name": "doc-write",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract doc.write.docx --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"outPath\":\"_conformance/sample.docx\",\"markdown\":\"# 标题\\n\\n正文 **粗体**\\n\\n| a | b |\\n|---|---|\\n| 1 | 2 |\",\"overwrite\":true}' --bad-args '{\"outPath\":\"../x.docx\",\"markdown\":\"x\"}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract doc.write.xlsx --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"outPath\":\"_conformance/sample.xlsx\",\"sheets\":[{\"name\":\"S1\",\"columns\":[\"a\",\"b\"],\"rows\":[[1,\"x\"]]}],\"overwrite\":true}' --bad-args '{\"outPath\":\"x.txt\",\"sheets\":[]}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract doc.write.html --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args '{\"outPath\":\"_conformance/sample.html\",\"markdown\":\"# 标题\\n\\n正文\",\"overwrite\":true}' --bad-args '{\"outPath\":\"/etc/x.html\",\"markdown\":\"x\"}'; rm -rf _conformance",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0",
+    "docx": "^9.5.0",
+    "exceljs": "^4.4.0",
+    "marked": "^18.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "jszip": "^3.10.1"
+  },
+  "description": "CAK 插件：产出办公文件（doc.write.docx@1 / doc.write.xlsx@1 / doc.write.html@1）— Markdown→Word、表格→Excel、Markdown→自包含 HTML"
+}

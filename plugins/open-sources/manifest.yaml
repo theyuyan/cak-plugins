@@ -1,0 +1,17 @@
+id: plugins/open-sources
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: feed.read, version: 1.0.0, schemaDigest: "sha256:8a0e309a61e61ffcd59091abbdf22dd8a769f9968706e78a963a0f14cbc529f6" }
+      priority: 50
+    - contract: { name: hn.top, version: 1.0.0, schemaDigest: "sha256:a2628def292f642be49332a18166601da08b35c93d248f65d735a5aaaa9a216c" }
+      priority: 50
+    - contract: { name: wiki.search, version: 1.0.0, schemaDigest: "sha256:172fdb6c1265400a8acbf342f7c2bde306d15cae7ee39cb18ed9cc9fcaeb493a" }
+      priority: 50
+    - contract: { name: arxiv.search, version: 1.0.0, schemaDigest: "sha256:2f4e74c611b39f3b02a6c8605438eeb19f82f12fd9ffdfa60de868fb3b20af72" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

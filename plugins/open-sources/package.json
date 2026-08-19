@@ -1,0 +1,19 @@
+{
+  "name": "open-sources",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract feed.read --args '{\"url\":\"https://hnrss.org/frontpage\",\"limit\":3}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract hn.top --args '{\"limit\":3}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract wiki.search --args '{\"q\":\"Hacker News\",\"lang\":\"en\",\"limit\":1}' && npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --contract arxiv.search --args '{\"q\":\"all:agent\",\"limit\":2}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：免 key 公开信息源——RSS/Atom/JSON Feed 订阅、Hacker News 榜单、维基百科搜索、arXiv 论文搜索（feed.read / hn.top / wiki.search / arxiv.search）"
+}

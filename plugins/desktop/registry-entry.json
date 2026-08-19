@@ -1,0 +1,78 @@
+{
+  "id": "desktop",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "桌面交互：弹系统通知（长任务跑完提醒）、用默认程序打开工作区内文件或 http(s) 网址、读/写系统剪贴板。macOS / Linux / Windows 都走系统自带命令，零依赖、无需配置。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/desktop"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "desktop.notify",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "title": "cak",
+        "message": "conformance"
+      }
+    },
+    {
+      "name": "desktop.open",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "target": "ftp://example.com/not-allowed"
+      }
+    },
+    {
+      "name": "desktop.clipboard.read",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "maxChars": 100
+      }
+    },
+    {
+      "name": "desktop.clipboard.write",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "text": "cak conformance"
+      }
+    }
+  ],
+  "keywords": [
+    "桌面",
+    "通知",
+    "系统通知",
+    "弹通知",
+    "提醒我",
+    "打开文件",
+    "打开网址",
+    "默认程序打开",
+    "剪贴板",
+    "复制到剪贴板",
+    "读剪贴板",
+    "desktop",
+    "notification",
+    "notify",
+    "toast",
+    "open file",
+    "open url",
+    "clipboard",
+    "copy",
+    "paste",
+    "pbcopy",
+    "xdg-open"
+  ],
+  "setup": "无需配置。Linux 需要 libnotify-bin（notify-send）、xdg-utils、xclip 或 wl-clipboard；macOS / Windows 自带。安装时的一致性测试对 desktop.open 用一个会被拒绝的 ftp:// 目标（不会真开浏览器）；desktop.clipboard.write 的样例会覆盖剪贴板一次。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/desktop",
+  "tier": "T1"
+}

@@ -1,0 +1,83 @@
+{
+  "id": "open-sources",
+  "version": "0.1.0",
+  "kernelCompat": "^0.3.0",
+  "description": "免 key 的公开信息源：读 RSS/Atom/JSON Feed 订阅源、取 Hacker News 榜单、搜维基百科、搜 arXiv 论文——让 agent 追热点、查资料、订阅更新；全部只读免审批，只需能出网。",
+  "license": "Apache-2.0",
+  "install": {
+    "type": "git",
+    "url": "https://github.com/theyuyan/cak-plugins.git",
+    "ref": "main",
+    "subdir": "plugins/open-sources"
+  },
+  "entrypoint": {
+    "type": "subprocess",
+    "command": "node",
+    "args": [
+      "dist/main.js"
+    ]
+  },
+  "contracts": [
+    {
+      "name": "feed.read",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "url": "https://hnrss.org/frontpage",
+        "limit": 3
+      },
+      "badArgs": {
+        "url": "http://127.0.0.1:1/feed.xml"
+      }
+    },
+    {
+      "name": "hn.top",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "limit": 3
+      }
+    },
+    {
+      "name": "wiki.search",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "q": "Hacker News",
+        "lang": "en",
+        "limit": 1
+      }
+    },
+    {
+      "name": "arxiv.search",
+      "version": "1.0.0",
+      "sampleArgs": {
+        "q": "all:agent",
+        "limit": 2
+      }
+    }
+  ],
+  "keywords": [
+    "RSS",
+    "Atom",
+    "JSON Feed",
+    "订阅",
+    "订阅源",
+    "博客更新",
+    "热点",
+    "新闻",
+    "Hacker News",
+    "HN",
+    "维基百科",
+    "百科",
+    "wikipedia",
+    "arXiv",
+    "论文",
+    "文献",
+    "paper",
+    "feed",
+    "news",
+    "trending",
+    "research"
+  ],
+  "setup": "无需配置、无需任何 key；只要能出网（维基/arXiv/HN 在部分网络环境可能不可达）。",
+  "source": "https://github.com/theyuyan/cak-plugins/tree/main/plugins/open-sources",
+  "tier": "T1"
+}

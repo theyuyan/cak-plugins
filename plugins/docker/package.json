@@ -1,0 +1,19 @@
+{
+  "name": "docker",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "for c in docker.ps docker.logs docker.exec docker.control; do case $c in docker.ps) A='{\"limit\":5}';; docker.logs) A='{\"container\":\"nonexistent\",\"tail\":10}';; docker.exec) A='{\"container\":\"nonexistent\",\"argv\":[\"true\"]}';; docker.control) A='{\"container\":\"nonexistent\",\"action\":\"start\"}';; esac; npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract $c --contracts ${CAK_REGISTRY:-$HOME/cak-registry}/contracts/community --args \"$A\" || exit 1; done",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak-dev/sdk": "^0.3.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：看容器/读日志/容器内执行/起停容器（docker.ps@1 / docker.logs@1 / docker.exec@1 / docker.control@1），走本机 docker CLI，不做删除"
+}
