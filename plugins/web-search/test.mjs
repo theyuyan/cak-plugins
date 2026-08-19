@@ -1,0 +1,20 @@
+// node --test：本地假服务器模拟 Brave / Tavily / SearXNG 的响应格式；未配置 → 明确错误；key 不进输出
+import { test } from 'node:test'; import assert from 'node:assert/strict'; import http from 'node:http'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path';
+import { WebSearchProvider, parsers } from './dist/provider.js';
+const call = (p, args) => p.execute({ id: 'i', revision: 0, contract: { name: 'web.search', version: '1.0.0', schemaDigest: 'x' }, args, handle: { id: 'h', contract: {}, caveats: [], delegable: true }, principal: [], digest: 'x', idempotencyKey: 'i' }, { principal: [], trace: { traceId: 't', spanId: 's' } });
+const seen = [];
+const srv = http.createServer((req, res) => { let body = ''; req.on('data', d => body += d); req.on('end', () => { seen.push({ url: req.url, auth: req.headers['x-subscription-token'], body });
+  if (req.url.startsWith('/res/v1/web/search')) return res.end(JSON.stringify({ web: { results: [{ title: 'Brave One', url: 'https://a.example/1', description: 'first <b>hit</b>', age: '2 days ago' }, { title: 'No url' }] } }));
+  if (req.url === '/search' && req.method === 'POST') return res.end(JSON.stringify({ results: [{ title: 'Tav', url: 'https://t.example', content: 'tavily snippet', published_date: '2026-08-01' }] }));
+  if (req.url.startsWith('/search?')) return res.end(JSON.stringify({ results: [{ title: 'SX', url: 'https://s.example', content: 'sx', publishedDate: '2026-01-01' }] }));
+  res.statusCode = 500; res.end('boom'); }); });
+await new Promise(r => srv.listen(0, '127.0.0.1', r)); const base = `http://127.0.0.1:${srv.address().port}`;
+const keyFile = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'ws-')), 'k'); fs.writeFileSync(keyFile, 'SECRET-KEY\n');
+test('brave', async () => { const r = await call(new WebSearchProvider({ engine: 'brave', keyFile, baseUrl: base }), { query: 'cak kernel', limit: 5, freshness: 'week' });
+  assert.equal(r.output.engine, 'brave'); assert.deepEqual(r.output.results, [{ title: 'Brave One', url: 'https://a.example/1', snippet: 'first hit', published: '2 days ago' }]);
+  assert.equal(seen.at(-1).auth, 'SECRET-KEY'); assert.match(seen.at(-1).url, /freshness=pw/); assert.doesNotMatch(JSON.stringify(r), /SECRET-KEY/); });
+test('tavily', async () => { const r = await call(new WebSearchProvider({ engine: 'tavily', keyFile, baseUrl: base }), { query: 'x' }); assert.equal(r.output.results[0].snippet, 'tavily snippet'); assert.match(seen.at(-1).body, /"api_key":"SECRET-KEY"/); });
+test('searxng + site + unconfigured', async () => { const r = await call(new WebSearchProvider({ engine: 'searxng', url: base }), { query: 'x', site: 'example.com' }); assert.equal(r.output.results[0].title, 'SX'); assert.match(decodeURIComponent(seen.at(-1).url), /site:example\.com/);
+  const none = new WebSearchProvider(undefined); process.env.WEB_SEARCH_CONFIG = '/nonexistent.json'; const r2 = await call(new WebSearchProvider(undefined), { query: 'x' }); assert.match(r2.error.message, /未配置/); void none; });
+test('parsers tolerate junk', () => { assert.deepEqual(parsers.brave({}), []); assert.deepEqual(parsers.tavily(null), []); assert.deepEqual(parsers.searxng({ results: [{}] }), [{ title: '', url: '' }]); });
+test.after(() => srv.close());

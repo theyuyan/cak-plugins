@@ -1,0 +1,11 @@
+id: plugins/doc-read
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: doc.read, version: 1.0.0, schemaDigest: "sha256:d4bdd0140cd001c4016bf0e83b877f3787de255f985beff1f2de23ba50334e43" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

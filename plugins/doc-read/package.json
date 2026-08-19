@@ -1,0 +1,26 @@
+{
+  "name": "doc-read",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "CAK_WORKSPACE=. npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract doc.read --args '{\"path\":\"fixtures/sample.csv\"}' --bad-args '{\"path\":\"../../etc/passwd\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak/sdk": "file:../../vendor/cak-sdk-0.3.0.tgz",
+    "pdf-parse": "^2.4.5",
+    "mammoth": "^1.12.1",
+    "exceljs": "^4.4.0",
+    "papaparse": "^5.6.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0",
+    "@types/papaparse": "^5.3.15",
+    "docx": "^9.5.0",
+    "pdf-lib": "^1.17.1"
+  },
+  "description": "CAK 插件：读文档为文本（doc.read@1）— PDF / docx / xlsx / csv / 文本"
+}

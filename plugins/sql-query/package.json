@@ -1,0 +1,19 @@
+{
+  "name": "sql-query",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "SQL_QUERY_CONFIG=./test-config.json npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract sql.query --args '{\"db\":\"demo\",\"sql\":\"select id, name from people order by id\"}' --bad-args '{\"db\":\"demo\",\"sql\":\"delete from people\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak/sdk": "file:../../vendor/cak-sdk-0.3.0.tgz"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：只读 SQL 查询（sql.query@1），SQLite 内置、Postgres 可选（npm i pg）"
+}

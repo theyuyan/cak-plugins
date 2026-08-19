@@ -1,0 +1,11 @@
+id: memory-sqlite
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: memory.search, version: 1.0.0, schemaDigest: "sha256:e013a26cdc1e4edabc823f574c787f46a8deab471b7a0940f286be04f70a5ebe" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

@@ -1,0 +1,11 @@
+id: plugins/github
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: x, version: 1.0.0, schemaDigest: "x" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

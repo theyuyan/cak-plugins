@@ -1,0 +1,11 @@
+id: http-fetch
+version: 0.1.0
+kernelCompat: "^0.3.0"
+roles: [capability]
+license: Apache-2.0
+provides:
+  implementations:
+    - contract: { name: http.fetch, version: 1.0.0, schemaDigest: "sha256:6dc3df771b28e7f4ddac8842d1414008d22dded6864d533f0d4523ad5ce977e6" }
+      priority: 50
+entrypoint: { type: subprocess, command: node, args: ["dist/main.js"] }
+health: { startupTimeoutMs: 3000, probe: call }

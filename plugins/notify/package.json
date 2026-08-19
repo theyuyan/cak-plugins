@@ -1,0 +1,19 @@
+{
+  "name": "notify",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "NOTIFY_CONFIG=/nonexistent.json npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract notify.send --args '{\"channel\":\"ops\",\"text\":\"hi\"}'",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@cak/sdk": "file:../../vendor/cak-sdk-0.3.0.tgz"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：通知（notify.send@1）— Slack/企微/钉钉/通用 webhook 别名制"
+}

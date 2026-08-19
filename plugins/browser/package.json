@@ -1,0 +1,21 @@
+{
+  "name": "browser",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "tsc -p .",
+    "conformance": "npx tsx ${CAK_HOME:-$HOME/agent-kernel}/bin/cak.ts conformance --subprocess \"node dist/main.js\" --contract browser.open --args '{\"url\":\"https://example.com/\"}' --bad-args '{\"url\":\"http://127.0.0.1:1/\"}'",
+    "test": "node --test test.mjs",
+    "postinstall": "playwright install chromium"
+  },
+  "dependencies": {
+    "@cak/sdk": "file:../../vendor/cak-sdk-0.3.0.tgz",
+    "playwright": "^1.62.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0",
+    "@types/node": "^22.0.0"
+  },
+  "description": "CAK 插件：真浏览器（Playwright/Chromium）— browser.open / browser.act / browser.snapshot"
+}

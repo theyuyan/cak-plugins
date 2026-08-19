@@ -1,0 +1,1 @@
+{ "name": "front-plain", "version": "0.1.0", "type": "module", "license": "Apache-2.0", "description": "CAK 前端插件（roles: frontend）：零依赖极简日志流前端，只连 daemon 控制面", "scripts": { "start": "node main.mjs" } }
